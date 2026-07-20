@@ -1,15 +1,10 @@
-Ver0.8 アップロード確認
+健康コンシェルジュ Ver0.8 Revision 0.8.2
 
-[ ] README.md
-[ ] UPLOAD_CHECK.txt
-[ ] app.js
-[ ] icon.svg
-[ ] index.html
-[ ] manifest.webmanifest
-[ ] seasoning-db.js  ← 新規・必須
-[ ] service-worker.js
-[ ] styles.css
-[ ] version.json
+GitHubのリポジトリ直下へ、このフォルダー内の10ファイルをすべて上書きしてください。
 
-確認URL:
-https://hara-den-ctrl.github.io/LifeTools/?v=081
+確認項目:
+1. app.js の先頭が BUILD 20260720-0802
+2. service-worker.js の CACHE が healthtools-v0.8.2
+3. version.json の revision が 0.8.2
+4. 食材画面に「食材情報検索・AI回答」が表示
+5. 野菜チェック欄に「ジャガイモ」「長芋」が表示

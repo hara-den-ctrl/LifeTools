@@ -8,11 +8,11 @@
   <title>健康コンシェルジュ Ver0.8</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=0.8.1">
+  <link rel="stylesheet" href="./styles.css?v=0.8.2">
   <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
-  <script src="./seasoning-db.js?v=0.8.1" defer></script>
-  <script src="./app.js?v=0.8.1" defer></script>
+  <script src="./seasoning-db.js?v=0.8.2" defer></script>
+  <script src="./app.js?v=0.8.2" defer></script>
 </head>
 <body>
 <header class="topbar">
@@ -78,7 +78,7 @@
     <div class="panel">
       <h2>今日の操作</h2>
       <div class="quick-grid">
-        <button class="quick jump" data-target="foods">🥬 食材を選ぶ</button>
+        <button class="quick jump focus-food-search" data-target="foods">🔎 食材を検索</button>
         <button class="quick jump" data-target="chef">🤖 献立を作る</button>
         <button class="quick jump" data-target="seasonings">🧂 調味料を確認</button>
         <button class="quick jump" data-target="fridge">🧊 冷蔵庫を確認</button>
@@ -99,9 +99,22 @@
         <div><small>文字入力不要</small><h2>食材チェック</h2></div>
         <button id="clearFoods" class="secondary small">全解除</button>
       </div>
-      <input id="foodSearch" type="search" placeholder="食材名で検索">
+      <input id="foodFilter" type="search" placeholder="チェック欄を絞り込み">
       <div id="foodGroups"></div>
     </div>
+
+    <div class="panel food-lookup-panel">
+      <div class="head-row">
+        <div><small>チェック欄にない食材にも対応</small><h2>食材情報検索・AI回答</h2></div>
+      </div>
+      <div class="search-action-row">
+        <input id="foodLookupInput" type="search" placeholder="例：長芋、れんこん、アボカド" enterkeyhint="search">
+        <button id="foodLookupButton" class="primary">検索</button>
+      </div>
+      <div id="foodLookupHistory" class="chip-row"></div>
+      <div id="foodLookupResult" class="food-lookup-result box">食材名を入力すると、健康上の注意とAI参考回答を表示します。</div>
+    </div>
+
     <div class="panel">
       <h2>選択食材の注意</h2>
       <div id="foodAdvice" class="cards">食材を選ぶと注意を表示します。</div>
@@ -238,7 +251,7 @@
         <div><dt>アプリ名</dt><dd>健康コンシェルジュ</dd></div>
         <div><dt>Version</dt><dd>0.8</dd></div>
         <div><dt>Build</dt><dd>20260720</dd></div>
-        <div><dt>キャッシュ</dt><dd>healthtools-v0.8.1</dd></div>
+        <div><dt>キャッシュ</dt><dd>healthtools-v0.8.2</dd></div>
       </dl>
     </div>
 
@@ -246,7 +259,7 @@
       <h2>更新履歴</h2>
       <article class="release">
         <strong>Ver0.8</strong>
-        <p>iPhone・PC共通の自動更新、更新通知、設定画面、更新履歴を追加。</p>
+        <p>調味料カテゴリー表示に加え、自由入力の食材検索、AI参考回答、検索食材からの献立連携を追加。</p>
       </article>
       <article class="release">
         <strong>Ver0.6</strong>

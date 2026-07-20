@@ -1,7 +1,7 @@
 const VERSION="0.8";
-const BUILD="20260720-0801";
+const BUILD="20260720-0802";
 const $=id=>document.getElementById(id);
-const LS={foods:"hc07.foods",seasonings:"hc07.seasonings",fridge:"hc07.fridge",records:"hc07.records",autoUpdate:"hc07.autoUpdate",favorites:"hc08.seasoningFavorites",recent:"hc08.seasoningRecent"};
+const LS={foods:"hc07.foods",seasonings:"hc07.seasonings",fridge:"hc07.fridge",records:"hc07.records",autoUpdate:"hc07.autoUpdate",favorites:"hc08.seasoningFavorites",recent:"hc08.seasoningRecent",foodHistory:"hc08.foodSearchHistory"};
 const state={
  foods:JSON.parse(localStorage.getItem(LS.foods)||"[]"),
  seasonings:JSON.parse(localStorage.getItem(LS.seasonings)||"[]"),
@@ -10,14 +10,31 @@ const state={
  favorites:JSON.parse(localStorage.getItem(LS.favorites)||"[]"),
  recent:JSON.parse(localStorage.getItem(LS.recent)||"[]"),
  seasoningMode:"all",
+ foodHistory:JSON.parse(localStorage.getItem(LS.foodHistory)||"[]"),
+ lastLookup:null,
  generated:[]
 };
 const foodData={
 "肉類":[["鶏むね肉","good","good","good","高たんぱく・低脂質。皮を外すとさらに良い。"],["鶏もも肉","good","warn","good","皮に脂質が多い。"],["豚ロース","good","warn","good","脂身を避ける。"],["豚こま","good","warn","good","赤身中心を選ぶ。"],["豚バラ","good","bad","good","脂質が多い。"],["牛赤身","good","warn","warn","量を控えめに。"],["レバー","good","warn","bad","プリン体が非常に多い。"]],
 "魚介":[["鮭","good","good","good","焼く・蒸す調理が向く。"],["サバ","good","good","warn","EPA・DHAは有益。食べ過ぎ注意。"],["アジ","good","good","warn","塩焼き向き。"],["ブリ","good","warn","warn","脂と甘い味付けに注意。"],["タラ","good","good","good","低脂質。"],["マグロ赤身","good","good","warn","大量摂取は控える。"],["イカ","good","good","warn","プリン体はやや多め。"],["エビ","good","good","warn","量を控えめに。"]],
-"野菜":[["キャベツ","good","good","good","かさ増しに便利。"],["玉ねぎ","good","good","good","通常量なら問題なし。"],["人参","good","good","good","副菜向き。"],["大根","good","good","good","煮物の砂糖量に注意。"],["ブロッコリー","good","good","good","食物繊維を補いやすい。"],["小松菜","good","good","good","副菜・汁物向き。"],["ほうれん草","good","good","good","つゆの量に注意。"],["ピーマン","good","good","good","油を使いすぎない。"],["きのこ","good","good","good","低エネルギー。"],["もやし","good","good","good","かさ増し向き。"],["トマト","good","good","good","加工品は糖類添加に注意。"],["なす","good","good","good","油を吸いやすい。"]],
+"野菜":[["キャベツ","good","good","good","かさ増しに便利。"],["玉ねぎ","good","good","good","通常量なら問題なし。"],["人参","good","good","good","副菜向き。"],["大根","good","good","good","煮物の砂糖量に注意。"],["ブロッコリー","good","good","good","食物繊維を補いやすい。"],["小松菜","good","good","good","副菜・汁物向き。"],["ほうれん草","good","good","good","つゆの量に注意。"],["ピーマン","good","good","good","油を使いすぎない。"],["きのこ","good","good","good","低エネルギー。"],["もやし","good","good","good","かさ増し向き。"],["トマト","good","good","good","加工品は糖類添加に注意。"],["なす","good","good","good","油を吸いやすい。"],["ジャガイモ","warn","good","good","主食に近い糖質量。ご飯と重ねず、1食80〜100g程度を目安に。"],["長芋","warn","good","good","糖質を含むため、ご飯に多量にかける食べ方は控えめに。1食50〜100g程度が目安。"]],
 "その他":[["卵","good","good","good","油を多用しない。"],["豆腐","good","good","good","主菜・副菜向き。"],["納豆","good","good","warn","1日1パック程度。"],["チーズ","good","warn","good","脂質・塩分に注意。"],["無糖ヨーグルト","good","good","good","加糖タイプは避ける。"],["こんにゃく","good","good","good","かさ増しに便利。"]]
 };
+
+const extraFoodData={
+ "れんこん":{category:"野菜・根菜",blood:"warn",liver:"good",uric:"good",portion:"50〜80g",note:"でんぷん質を含みます。きんぴらや煮物では砂糖・みりんの量にも注意。",pairs:["鶏むね肉","豆腐","きのこ"]},
+ "ごぼう":{category:"野菜・根菜",blood:"good",liver:"good",uric:"good",portion:"50〜80g",note:"食物繊維を取りやすい食材です。甘辛い味付けと油の使い過ぎに注意。",pairs:["鶏むね肉","こんにゃく","きのこ"]},
+ "アボカド":{category:"果実・野菜",blood:"good",liver:"warn",uric:"good",portion:"1/4〜1/2個",note:"糖質は少なめですが脂質とエネルギーは高めです。適量を意識してください。",pairs:["豆腐","トマト","鶏むね肉"]},
+ "かぼちゃ":{category:"野菜",blood:"warn",liver:"good",uric:"good",portion:"50〜80g",note:"野菜の中では糖質が多めです。主食と重ね過ぎず、甘い煮付けは控えめに。",pairs:["鶏むね肉","きのこ","小松菜"]},
+ "さつまいも":{category:"いも類",blood:"warn",liver:"good",uric:"good",portion:"70〜100g",note:"食物繊維はありますが糖質量も多めです。間食では量を決めて食べましょう。",pairs:["無糖ヨーグルト","卵","小松菜"]},
+ "里芋":{category:"いも類",blood:"warn",liver:"good",uric:"good",portion:"80〜100g",note:"いも類として糖質を含みます。煮物の砂糖量と主食との重複に注意。",pairs:["鶏むね肉","こんにゃく","大根"]},
+ "オクラ":{category:"野菜",blood:"good",liver:"good",uric:"good",portion:"5〜8本",note:"食物繊維を取りやすく、副菜に使いやすい食材です。たれやドレッシングの塩分に注意。",pairs:["豆腐","納豆","卵"]},
+ "ズッキーニ":{category:"野菜",blood:"good",liver:"good",uric:"good",portion:"100〜150g",note:"低糖質で使いやすい食材です。油を吸いやすいので炒め油は控えめに。",pairs:["鶏むね肉","トマト","きのこ"]},
+ "自然薯":{category:"いも類",blood:"warn",liver:"good",uric:"good",portion:"50〜80g",note:"長芋と同様に糖質を含みます。とろろをご飯へ多量にかける食べ方は控えめに。",pairs:["卵","豆腐","海藻"]},
+ "山芋":{category:"いも類",blood:"warn",liver:"good",uric:"good",portion:"50〜100g",note:"山芋類は糖質を含みます。主食との合計量を考えて使ってください。",pairs:["卵","豆腐","鶏むね肉"]}
+};
+const foodAliases={"じゃがいも":"ジャガイモ","馬鈴薯":"ジャガイモ","ばれいしょ":"ジャガイモ","ながいも":"長芋","山いも":"山芋","レンコン":"れんこん","蓮根":"れんこん","サツマイモ":"さつまいも","さといも":"里芋","南瓜":"かぼちゃ"};
+
 const seasoningData=window.SEASONING_DB||[];
 const recipes=[
 {name:"鶏むね肉とキャベツの蒸し焼き",need:["鶏むね肉","キャベツ"],opt:["玉ねぎ","きのこ"],time:20,b:5,l:5,u:5,sea:["濃口しょうゆ"],steps:"薄切り → 蒸し焼き → しょうゆ少量"},
@@ -33,9 +50,16 @@ const recipes=[
 ];
 const allFoods=()=>Object.values(foodData).flat().map(x=>x[0]);
 const foodObj=n=>Object.values(foodData).flat().find(x=>x[0]===n);
+const normalizeFoodName=n=>{const clean=String(n||"").trim().replace(/[<>"'`]/g,"").slice(0,40);return foodAliases[clean]||clean;};
+function lookupFood(name){
+ const n=normalizeFoodName(name),base=foodObj(n);
+ if(base)return {name:n,category:Object.entries(foodData).find(([,items])=>items.some(x=>x[0]===n))?.[0]||"食材",blood:base[1],liver:base[2],uric:base[3],portion:"適量",note:base[4],pairs:["野菜","たんぱく質食材","薄味の調味料"],registered:true};
+ if(extraFoodData[n])return {name:n,...extraFoodData[n],registered:true};
+ return {name:n,category:"未登録食材",blood:"warn",liver:"warn",uric:"warn",portion:"食品表示や公的な食品成分情報を確認",note:"詳細データが未登録のため、一般的な食材として簡易判定しています。種類・量・調理法により評価は変わります。",pairs:["野菜","豆腐","鶏むね肉"],registered:false};
+}
 const seaObj=n=>seasoningData.find(x=>x.name===n);
 const badge=v=>v==="good"?["◎","good"]:v==="warn"?["△","warn"]:["×","bad"];
-const save=()=>{localStorage.setItem(LS.foods,JSON.stringify(state.foods));localStorage.setItem(LS.seasonings,JSON.stringify(state.seasonings));localStorage.setItem(LS.fridge,JSON.stringify(state.fridge));localStorage.setItem(LS.records,JSON.stringify(state.records));localStorage.setItem(LS.favorites,JSON.stringify(state.favorites));localStorage.setItem(LS.recent,JSON.stringify(state.recent));};
+const save=()=>{localStorage.setItem(LS.foods,JSON.stringify(state.foods));localStorage.setItem(LS.seasonings,JSON.stringify(state.seasonings));localStorage.setItem(LS.fridge,JSON.stringify(state.fridge));localStorage.setItem(LS.records,JSON.stringify(state.records));localStorage.setItem(LS.favorites,JSON.stringify(state.favorites));localStorage.setItem(LS.recent,JSON.stringify(state.recent));localStorage.setItem(LS.foodHistory,JSON.stringify(state.foodHistory));};
 function switchView(id){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.view===id));window.scrollTo({top:0,behavior:"smooth"});}
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>switchView(b.dataset.view));
 document.querySelectorAll(".jump").forEach(b=>b.onclick=()=>switchView(b.dataset.target));
@@ -51,10 +75,39 @@ function renderFoods(filter=""){
 }
 function renderFoodAdvice(){
  if(!state.foods.length){$("foodAdvice").textContent="食材を選ぶと注意を表示します。";return}
- $("foodAdvice").innerHTML=state.foods.map(n=>{const x=foodObj(n),b=badge(x[1]),l=badge(x[2]),u=badge(x[3]);return `<article class="card"><h3>${n}</h3><p><span class="badge ${b[1]}">血糖 ${b[0]}</span><span class="badge ${l[1]}">肝臓 ${l[0]}</span><span class="badge ${u[1]}">尿酸 ${u[0]}</span></p><p>${x[4]}</p></article>`}).join("");
+ $("foodAdvice").innerHTML=state.foods.map(n=>{const x=lookupFood(n),b=badge(x.blood),l=badge(x.liver),u=badge(x.uric);return `<article class="card"><h3>${x.name}</h3><p><span class="badge ${b[1]}">血糖 ${b[0]}</span><span class="badge ${l[1]}">肝臓 ${l[0]}</span><span class="badge ${u[1]}">尿酸 ${u[0]}</span></p><p>${x.note}</p>${x.registered?"":"<p class=\"fine\">未登録食材の簡易判定</p>"}</article>`}).join("");
 }
-$("foodSearch").oninput=e=>renderFoods(e.target.value.trim());
-$("clearFoods").onclick=()=>{state.foods=[];save();renderFoods($("foodSearch").value.trim());};
+$("foodFilter").oninput=e=>renderFoods(e.target.value.trim());
+$("clearFoods").onclick=()=>{state.foods=[];save();renderFoods($("foodFilter").value.trim());};
+
+function aiFoodAnswer(info){
+ const hb=Number($("baseHb")?.value||6),alt=Number($("baseAlt")?.value||45),ua=Number($("baseUa")?.value||6.9);
+ const blood=info.blood==="good"?"血糖面では比較的取り入れやすい":info.blood==="warn"?"糖質量や食べる量を意識したい":"血糖面で注意が必要";
+ const liver=info.liver==="good"?"肝臓面では大きな懸念は少ない":info.liver==="warn"?"脂質や調理油を控えめにしたい":"肝臓への負担に注意したい";
+ const uric=info.uric==="good"?"尿酸面では比較的使いやすい":info.uric==="warn"?"食べ過ぎと水分不足に注意したい":"プリン体等に注意したい";
+ return `${info.name}は、現在の登録値（HbA1c ${hb.toFixed(1)}、ALT ${Math.round(alt)}、尿酸 ${ua.toFixed(1)}）を踏まえると、${blood}食材です。${liver}一方、${uric}と考えられます。目安量は${info.portion}。${info.pairs.join("・")}などと組み合わせ、甘い味付けや油を増やし過ぎない調理がおすすめです。`;
+}
+function renderFoodHistory(){
+ $("foodLookupHistory").innerHTML=state.foodHistory.length?`<span class="history-label">最近：</span>${state.foodHistory.map(n=>`<button type="button" class="food-chip" data-history-food="${n}">${n}</button>`).join("")}`:"";
+ document.querySelectorAll("[data-history-food]").forEach(b=>b.onclick=()=>{$("foodLookupInput").value=b.dataset.historyFood;runFoodLookup();});
+}
+function runFoodLookup(){
+ const raw=$("foodLookupInput").value.trim();if(!raw)return alert("食材名を入力してください。");
+ const info=lookupFood(raw);state.lastLookup=info;state.foodHistory=[info.name,...state.foodHistory.filter(x=>x!==info.name)].slice(0,8);save();renderFoodHistory();
+ const b=badge(info.blood),l=badge(info.liver),u=badge(info.uric);
+ $("foodLookupResult").className="food-lookup-result";
+ $("foodLookupResult").innerHTML=`<article class="lookup-card"><div class="lookup-title"><div><small>${info.category}${info.registered?"":"／簡易判定"}</small><h3>${info.name}</h3></div></div><p><span class="badge ${b[1]}">血糖 ${b[0]}</span><span class="badge ${l[1]}">肝臓 ${l[0]}</span><span class="badge ${u[1]}">尿酸 ${u[0]}</span></p><p><strong>1食の目安：</strong>${info.portion}</p><p><strong>食材注意：</strong>${info.note}</p><section class="ai-answer"><h4>🤖 AIからの参考回答</h4><p>${aiFoodAnswer(info)}</p></section><p class="fine">※AIによる参考情報です。診断・治療判断ではありません。未登録食材は簡易判定です。</p><div class="lookup-actions"><button id="addLookupFood" class="secondary">選択食材に追加</button><button id="lookupToChef" class="primary">この食材でAI献立</button></div></article>`;
+ $("addLookupFood").onclick=()=>addLookupFood(info,false);$("lookupToChef").onclick=()=>addLookupFood(info,true);
+}
+function addLookupFood(info,toChef){state.foods=[...new Set([...state.foods,info.name])];save();renderFoods($("foodFilter").value.trim());renderFoodAdvice();renderSelected();if(toChef){state.generated=makeLookupMeals(info);renderGeneratedMeals(state.generated);switchView("chef");}}
+function makeLookupMeals(info){const pair=info.pairs||["豆腐","野菜","卵"];return [
+ {name:`${info.name}と${pair[0]}の薄味炒め`,need:[info.name],opt:[pair[0]],time:20,b:info.blood==="good"?5:4,l:info.liver==="good"?5:4,u:info.uric==="good"?5:4,sea:["濃口しょうゆ"],steps:`${info.name}を食べやすく切る → 油少量で加熱 → 薄味で仕上げる`,score:10,missing:[]},
+ {name:`${info.name}と${pair[1]}のだし煮`,need:[info.name],opt:[pair[1]],time:25,b:4,l:5,u:5,sea:["白だし"],steps:`だしを薄める → ${info.name}と具材を煮る → 汁は飲み過ぎない`,score:9,missing:[]},
+ {name:`${info.name}入り卵料理`,need:[info.name,"卵"],opt:[pair[2]],time:15,b:4,l:5,u:5,sea:["濃口しょうゆ"],steps:`${info.name}を下ごしらえ → 卵と合わせる → 油と調味料は控えめ`,score:8,missing:state.foods.includes("卵")?[]:["卵"]}
+ ];}
+$("foodLookupButton").onclick=runFoodLookup;$("foodLookupInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();runFoodLookup();}});
+document.querySelectorAll(".focus-food-search").forEach(b=>b.addEventListener("click",()=>setTimeout(()=>$("foodLookupInput").focus(),250)));
+renderFoodHistory();
 
 function renderSeasonings(filter=""){
  const q=filter.toLowerCase();
@@ -82,6 +135,9 @@ function generateMeals(){
  const selected=[...new Set([...state.foods,...state.fridge.map(x=>x.name)])],t=Number($("timeLimit").value),purpose=$("purpose").value,expiring=state.fridge.filter(x=>daysTo(x.expiry)<=2).map(x=>x.name);
  let ranked=recipes.map(r=>{const matched=r.need.filter(x=>selected.includes(x)).length,missing=r.need.filter(x=>!selected.includes(x)),opt=r.opt.filter(x=>selected.includes(x)).length;let score=matched*5+opt*1.5-missing.length*2+(r.time<=t?2:-3);if(purpose==="tired"&&r.time<=15)score+=3;if(purpose==="sake"&&/鮭|タラ|サバ|豆腐|ブリ/.test(r.name))score+=2;if(purpose==="light"&&r.l>=5)score+=2;if(purpose==="useup"&&r.need.some(x=>expiring.includes(x)))score+=4;return {...r,score,missing};}).filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,6);
  state.generated=ranked;
+ renderGeneratedMeals(ranked);
+}
+function renderGeneratedMeals(ranked){
  $("mealResults").innerHTML=ranked.length?ranked.map((r,i)=>{const ws=r.sea.map(seaObj).filter(Boolean).filter(x=>x.blood!=="good"||x.liver!=="good"||x.uric!=="good");return `<article class="card"><h3>${i+1}. ${r.name}</h3><p><span class="badge ${r.b>=4?"good":"warn"}">血糖 ${r.b}/5</span><span class="badge ${r.l>=4?"good":"warn"}">肝臓 ${r.l}/5</span><span class="badge ${r.u>=4?"good":"warn"}">尿酸 ${r.u}/5</span></p><p><strong>${r.time}分</strong>　${r.steps}</p><p><strong>調味料：</strong>${r.sea.join("、")}</p>${ws.length?`<p><strong>調味料注意：</strong>${ws.map(x=>`${x.name}：${x.advice}`).join(" / ")}</p>`:""}${r.missing.length?`<p><strong>不足：</strong>${r.missing.join("、")}</p>`:""}<button class="secondary pick-meal" data-i="${i}">記録候補にする</button></article>`}).join(""):"<article class='card'>食材を2つ以上選んでください。</article>";
  document.querySelectorAll(".pick-meal").forEach(b=>b.onclick=()=>{updateMealSelect(ranked[Number(b.dataset.i)].name);switchView("record");});
  updateMealSelect();
@@ -200,5 +256,5 @@ async function registerServiceWorker(){
  }
 }
 
-renderFoods();renderSeasonings();renderFridge();renderSelected();updateMealSelect();renderRecords();renderPrediction();
+renderFoods();renderSeasonings();renderFridge();renderSelected();updateMealSelect();renderRecords();renderPrediction();renderFoodHistory();
 registerServiceWorker().finally(()=>setTimeout(()=>checkForUpdate(false),800));
