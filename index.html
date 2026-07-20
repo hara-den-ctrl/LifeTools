@@ -4,15 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#147a52">
-  <meta name="description" content="健康コンシェルジュ Ver0.8">
-  <title>健康コンシェルジュ Ver0.8</title>
+  <meta name="description" content="健康コンシェルジュ Ver0.8.3">
+  <title>健康コンシェルジュ Ver0.8.3</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=0.8.2">
+  <link rel="stylesheet" href="./styles.css?v=0.8.3">
   <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
-  <script src="./seasoning-db.js?v=0.8.2" defer></script>
-  <script src="./app.js?v=0.8.2" defer></script>
+  <script src="./seasoning-db.js?v=0.8.3" defer></script>
+  <script src="./app.js?v=0.8.3" defer></script>
 </head>
 <body>
 <header class="topbar">
@@ -20,7 +20,7 @@
     <small>LifeTools / HealthTools</small>
     <h1>🍃 健康コンシェルジュ</h1>
   </div>
-  <button class="version-badge jump" data-target="settings" aria-label="アプリ情報を開く">Ver0.8</button>
+  <button class="version-badge jump" data-target="settings" aria-label="アプリ情報を開く">Ver0.8.3</button>
 </header>
 
 <div id="updateBanner" class="update-banner" hidden>
@@ -178,30 +178,46 @@
 
   <section id="record" class="view">
     <div class="panel">
-      <h2>健康記録</h2>
+      <div class="head-row"><div><small>食事内容を詳しく入力</small><h2>食事記録・影響予測</h2></div></div>
       <div class="form-grid three">
-        <label>HbA1c<input id="baseHb" type="number" value="6.0" step="0.1"></label>
-        <label>ALT<input id="baseAlt" type="number" value="45" step="1"></label>
-        <label>尿酸<input id="baseUa" type="number" value="6.9" step="0.1"></label>
+        <label>現在のHbA1c<input id="baseHb" type="number" value="6.0" step="0.1" min="3" max="20"></label>
+        <label>現在のALT<input id="baseAlt" type="number" value="45" step="1" min="1" max="1000"></label>
+        <label>現在の尿酸値<input id="baseUa" type="number" value="6.9" step="0.1" min="1" max="20"></label>
       </div>
+      <hr class="divider">
+      <label>食べた献立名<input id="mealName" type="text" maxlength="80" placeholder="例：鶏むね肉の照り焼き定食"></label>
+      <label>AI献立候補から選ぶ（任意）<select id="mealSelect"><option value="">選択してください</option></select></label>
+      <label>食材名と量<textarea id="foodAmount" rows="4" maxlength="500" placeholder="例：鶏むね肉150g、白ご飯150g、キャベツ100g"></textarea></label>
+      <div class="form-grid">
+        <label>調味料<input id="recordSeasonings" type="text" maxlength="200" placeholder="例：しょうゆ小さじ2、みりん小さじ1"></label>
+        <label>飲み物<input id="drinks" type="text" maxlength="200" placeholder="例：水500ml、無糖コーヒー1杯"></label>
+      </div>
+      <div class="form-grid three">
+        <label>飲酒量<input id="alcoholAmount" type="text" maxlength="100" placeholder="例：ビール500ml、日本酒1合"></label>
+        <label>食事量<select id="mealAmount"><option value="small">少なめ</option><option value="normal" selected>普通</option><option value="large">多め</option><option value="veryLarge">かなり多い</option></select></label>
+        <label>食事区分<select id="mealType"><option value="breakfast">朝食</option><option value="lunch">昼食</option><option value="dinner" selected>夕食</option><option value="snack">間食・夜食</option></select></label>
+      </div>
+      <label>満腹度 <span id="fullnessValue">7 / 10</span><input id="fullness" type="range" min="1" max="10" value="7"></label>
       <div class="daily-grid">
         <label><input id="water" type="checkbox"> 水分を十分とった</label>
-        <label><input id="walk" type="checkbox"> 20分以上歩いた</label>
+        <label><input id="walk" type="checkbox"> 食後を含め20分以上歩いた</label>
         <label><input id="sweat" type="checkbox"> 発汗を伴う活動</label>
-        <label><input id="alcohol" type="checkbox"> 飲酒した</label>
+        <label><input id="lateMeal" type="checkbox"> 就寝2時間以内の食事</label>
       </div>
-      <label>食べた献立<select id="mealSelect"><option value="">選択してください</option></select></label>
-      <button id="saveRecord" class="primary full">記録へ追加</button>
+      <label>自由メモ<textarea id="recordMemo" rows="4" maxlength="1000" placeholder="体調、食後の眠気、外食、服薬など自由に記録"></textarea></label>
+      <button id="previewRecord" class="secondary full">入力内容から予測する</button>
+      <div id="currentImpact" class="impact-grid"></div>
+      <button id="saveRecord" class="primary full">入力内容と予測結果を履歴保存</button>
     </div>
 
     <div class="panel">
-      <h2>予測レンジ</h2>
+      <h2>HbA1c・ALT・尿酸値の予測傾向</h2>
       <div id="prediction" class="prediction-grid"></div>
-      <p class="fine">生活記録からの簡易推定です。実際の血液検査値を予測・保証するものではありません。</p>
+      <p class="fine">食事内容と生活記録からの簡易的な傾向推定です。血液検査値そのものを診断・予測・保証する機能ではありません。</p>
     </div>
 
     <div class="panel">
-      <div class="head-row"><h2>履歴</h2><button id="clearRecords" class="secondary small">履歴削除</button></div>
+      <div class="head-row"><h2>食事・予測履歴</h2><button id="clearRecords" class="secondary small">履歴削除</button></div>
       <div id="recordHistory">まだ記録がありません。</div>
     </div>
   </section>
@@ -242,23 +258,24 @@
         <div><strong>今すぐ最新版を確認</strong><p>GitHub上のversion.jsonをキャッシュせず確認します。</p></div>
         <button id="manualUpdateCheck" class="secondary">更新確認</button>
       </div>
-      <div id="updateStatus" class="box">現在 Ver0.8</div>
+      <div id="updateStatus" class="box">現在 Ver0.8.3</div>
     </div>
 
     <div class="panel">
       <h2>アプリ情報</h2>
       <dl class="app-info">
         <div><dt>アプリ名</dt><dd>健康コンシェルジュ</dd></div>
-        <div><dt>Version</dt><dd>0.8</dd></div>
-        <div><dt>Build</dt><dd>20260720</dd></div>
-        <div><dt>キャッシュ</dt><dd>healthtools-v0.8.2</dd></div>
+        <div><dt>Version</dt><dd>0.8.3</dd></div>
+        <div><dt>Build</dt><dd>20260720-0830</dd></div>
+        <div><dt>キャッシュ</dt><dd>healthtools-v0.8.3</dd></div>
       </dl>
     </div>
 
     <div class="panel">
       <h2>更新履歴</h2>
+      <article class="release"><strong>Ver0.8.3</strong><p>献立・食材量・調味料・飲み物・飲酒量・食事量・区分・満腹度・メモを記録し、血糖・肝臓・尿酸への影響と3指標の予測傾向を履歴保存。</p></article>
       <article class="release">
-        <strong>Ver0.8</strong>
+        <strong>Ver0.8.3</strong>
         <p>調味料カテゴリー表示に加え、自由入力の食材検索、AI参考回答、検索食材からの献立連携を追加。</p>
       </article>
       <article class="release">
@@ -270,7 +287,7 @@
 </main>
 
 <footer>
-  <strong>健康コンシェルジュ Ver0.8</strong><br>
+  <strong>健康コンシェルジュ Ver0.8.3</strong><br>
   Build 20260720
 </footer>
 </body>
