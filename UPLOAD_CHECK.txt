@@ -1,29 +1,14 @@
-健康コンシェルジュ Ver0.7 リリース検証
+健康コンシェルジュ Ver0.8
 
-OK index.htmlはHTML
-OK app.jsはJavaScript
-OK README.mdはMarkdown
-OK アイコンはルート配置
-OK version.jsonはVer0.7
-OK キャッシュ名はVer0.7
-OK Service Workerの更新キャッシュ無効
-OK version.jsonはno-store
-OK 即時更新処理
-OK Ver・Build表示
+GitHubへ以下9ファイルをすべて上書きアップロードしてください。
+index.html
+app.js
+seasoning-db.js
+styles.css
+manifest.webmanifest
+service-worker.js
+version.json
+README.md
+icon.svg
 
-ファイル先頭
-index.html: <!doctype html>
-app.js: const VERSION="0.7";
-README.md: # 健康コンシェルジュ Ver0.7
-manifest.webmanifest: {
-version.json: {
-
-SHA-256
-README.md: 77a5b86fc88f379a4cabc07fa555831355f37e9c89c39985bded1c0ae96f2a6a
-app.js: 0dad8a80175b3aa67c52c01f822a11202d0c9085ea549f5f040c8953ff2d832b
-icon.svg: d46acac5d44783f313d96338d55e868f43c5cc82d4fbcaeab8b44af5959b7c49
-index.html: 973a8b57ee8655b5ff77abe47b648def0288e3db42d20845f3ff5aceea2e24b2
-manifest.webmanifest: 1911448bffb21738889e57429c198d6e3d4093b17978e19decd432a84f059dd8
-service-worker.js: 6f4f1cbb214c5a4c90be2069ab25b59e46cb89a4e37d382dbd06e91f47c826fe
-styles.css: 42d1747c9e8c19af9711ab7d28ce666c54b375adb0d37143d7fac6dd6b36dfb1
-version.json: 5e2ac893bab599344425792ff188af00bcd22dea2d79655afa3e6116f218fd5d
+アップロード後: https://hara-den-ctrl.github.io/LifeTools/?v=080

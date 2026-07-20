@@ -1,9 +1,10 @@
-const CACHE="healthtools-v0.7.0";
+const CACHE="healthtools-v0.8.0";
 const CORE=[
   "./",
   "./index.html",
-  "./styles.css?v=0.7",
-  "./app.js?v=0.7",
+  "./styles.css?v=0.8.0",
+  "./seasoning-db.js?v=0.8.0",
+  "./app.js?v=0.8.0",
   "./manifest.webmanifest",
   "./version.json",
   "./icon.svg"

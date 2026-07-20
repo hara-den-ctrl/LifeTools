@@ -4,14 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#147a52">
-  <meta name="description" content="健康コンシェルジュ Ver0.7">
-  <title>健康コンシェルジュ Ver0.7</title>
+  <meta name="description" content="健康コンシェルジュ Ver0.8">
+  <title>健康コンシェルジュ Ver0.8</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=0.7">
+  <link rel="stylesheet" href="./styles.css?v=0.8.0">
   <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
-  <script src="./app.js?v=0.7" defer></script>
+  <script src="./seasoning-db.js?v=0.8.0" defer></script>
+  <script src="./app.js?v=0.8.0" defer></script>
 </head>
 <body>
 <header class="topbar">
@@ -19,7 +20,7 @@
     <small>LifeTools / HealthTools</small>
     <h1>🍃 健康コンシェルジュ</h1>
   </div>
-  <button class="version-badge jump" data-target="settings" aria-label="アプリ情報を開く">Ver0.7</button>
+  <button class="version-badge jump" data-target="settings" aria-label="アプリ情報を開く">Ver0.8</button>
 </header>
 
 <div id="updateBanner" class="update-banner" hidden>
@@ -136,9 +137,10 @@
 
   <section id="seasonings" class="view">
     <div class="panel">
-      <div class="head-row"><div><small>市販商品・一般調味料</small><h2>調味料チェック</h2></div></div>
-      <input id="seasoningSearch" type="search" placeholder="調味料名で検索">
-      <div id="seasoningList" class="check-grid"></div>
+      <div class="head-row"><div><small>カテゴリー別・1,000件</small><h2>調味料チェック</h2></div><span id="seasoningCount" class="state success">1,000件</span></div>
+      <input id="seasoningSearch" type="search" placeholder="商品名・種類で検索（例：めんつゆ、減塩）">
+      <p class="fine">カテゴリーを開いた時だけ候補を表示します。分類プロファイルは商品ラベルの代わりではありません。</p>
+      <div id="seasoningList" class="seasoning-categories"></div>
     </div>
     <div class="panel">
       <h2>使用時の注意</h2>
@@ -227,7 +229,7 @@
         <div><strong>今すぐ最新版を確認</strong><p>GitHub上のversion.jsonをキャッシュせず確認します。</p></div>
         <button id="manualUpdateCheck" class="secondary">更新確認</button>
       </div>
-      <div id="updateStatus" class="box">現在 Ver0.7</div>
+      <div id="updateStatus" class="box">現在 Ver0.8</div>
     </div>
 
     <div class="panel">
@@ -243,7 +245,7 @@
     <div class="panel">
       <h2>更新履歴</h2>
       <article class="release">
-        <strong>Ver0.7</strong>
+        <strong>Ver0.8</strong>
         <p>iPhone・PC共通の自動更新、更新通知、設定画面、更新履歴を追加。</p>
       </article>
       <article class="release">
@@ -255,7 +257,7 @@
 </main>
 
 <footer>
-  <strong>健康コンシェルジュ Ver0.7</strong><br>
+  <strong>健康コンシェルジュ Ver0.8</strong><br>
   Build 20260720
 </footer>
 </body>

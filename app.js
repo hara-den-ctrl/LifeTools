@@ -1,4 +1,4 @@
-const VERSION="0.7";
+const VERSION="0.8";
 const BUILD="20260720";
 const $=id=>document.getElementById(id);
 const LS={foods:"hc07.foods",seasonings:"hc07.seasonings",fridge:"hc07.fridge",records:"hc07.records",autoUpdate:"hc07.autoUpdate"};
@@ -15,20 +15,7 @@ const foodData={
 "野菜":[["キャベツ","good","good","good","かさ増しに便利。"],["玉ねぎ","good","good","good","通常量なら問題なし。"],["人参","good","good","good","副菜向き。"],["大根","good","good","good","煮物の砂糖量に注意。"],["ブロッコリー","good","good","good","食物繊維を補いやすい。"],["小松菜","good","good","good","副菜・汁物向き。"],["ほうれん草","good","good","good","つゆの量に注意。"],["ピーマン","good","good","good","油を使いすぎない。"],["きのこ","good","good","good","低エネルギー。"],["もやし","good","good","good","かさ増し向き。"],["トマト","good","good","good","加工品は糖類添加に注意。"],["なす","good","good","good","油を吸いやすい。"]],
 "その他":[["卵","good","good","good","油を多用しない。"],["豆腐","good","good","good","主菜・副菜向き。"],["納豆","good","good","warn","1日1パック程度。"],["チーズ","good","warn","good","脂質・塩分に注意。"],["無糖ヨーグルト","good","good","good","加糖タイプは避ける。"],["こんにゃく","good","good","good","かさ増しに便利。"]]
 };
-const seasoningData=[
-["キッコーマン 本つゆ 濃縮4倍","warn","good","good","ぶどう糖果糖液糖","使用量を控え、だしや水で薄める。"],
-["一般的なめんつゆ","warn","good","good","砂糖・異性化糖の可能性","原材料を確認する。"],
-["濃口しょうゆ","good","good","good","塩分","かけすぎに注意。"],
-["本みりん","warn","good","good","糖質","小さじ1〜2程度。"],
-["料理酒","good","warn","good","塩分・アルコール","加熱前提。"],
-["味噌","good","good","good","塩分","具を多くして薄味に。"],
-["ポン酢","warn","good","good","異性化糖の可能性","商品ごとに確認。"],
-["焼肉のたれ","bad","warn","good","砂糖・水あめ・異性化糖","少量使用。"],
-["ノンオイルドレッシング","warn","good","good","糖類","脂質が少なくても糖類に注意。"],
-["マヨネーズ","good","bad","good","脂質","小さじ1程度。"],
-["ケチャップ","warn","good","good","砂糖・異性化糖","大さじ量を控える。"],
-["ウスターソース","warn","good","good","糖類・塩分","かけすぎ注意。"]
-];
+const seasoningData=window.SEASONING_DB||[];
 const recipes=[
 {name:"鶏むね肉とキャベツの蒸し焼き",need:["鶏むね肉","キャベツ"],opt:["玉ねぎ","きのこ"],time:20,b:5,l:5,u:5,sea:["濃口しょうゆ"],steps:"薄切り → 蒸し焼き → しょうゆ少量"},
 {name:"鮭ときのこのホイル焼き",need:["鮭","きのこ"],opt:["玉ねぎ","ピーマン"],time:25,b:5,l:5,u:5,sea:["濃口しょうゆ"],steps:"包む → 蒸す → 薄味"},
@@ -43,7 +30,7 @@ const recipes=[
 ];
 const allFoods=()=>Object.values(foodData).flat().map(x=>x[0]);
 const foodObj=n=>Object.values(foodData).flat().find(x=>x[0]===n);
-const seaObj=n=>seasoningData.find(x=>x[0]===n);
+const seaObj=n=>seasoningData.find(x=>x.name===n);
 const badge=v=>v==="good"?["◎","good"]:v==="warn"?["△","warn"]:["×","bad"];
 const save=()=>{localStorage.setItem(LS.foods,JSON.stringify(state.foods));localStorage.setItem(LS.seasonings,JSON.stringify(state.seasonings));localStorage.setItem(LS.fridge,JSON.stringify(state.fridge));localStorage.setItem(LS.records,JSON.stringify(state.records));};
 function switchView(id){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.view===id));window.scrollTo({top:0,behavior:"smooth"});}
@@ -67,13 +54,17 @@ $("foodSearch").oninput=e=>renderFoods(e.target.value.trim());
 $("clearFoods").onclick=()=>{state.foods=[];save();renderFoods($("foodSearch").value.trim());};
 
 function renderSeasonings(filter=""){
- $("seasoningList").innerHTML=seasoningData.filter(x=>x[0].includes(filter)).map(x=>`<label class="check-item"><input type="checkbox" data-sea="${x[0]}" ${state.seasonings.includes(x[0])?"checked":""}>${x[0]}</label>`).join("");
+ const q=filter.toLowerCase();
+ const matched=seasoningData.filter(x=>!q||`${x.name} ${x.category}`.toLowerCase().includes(q));
+ $("seasoningCount").textContent=`${matched.length.toLocaleString("ja-JP")}件`;
+ const groups={};matched.forEach(x=>(groups[x.category]??=[]).push(x));
+ $("seasoningList").innerHTML=Object.entries(groups).map(([category,items])=>`<details class="seasoning-category" ${q?"open":""}><summary><span>${category}</span><strong>${items.length}件</strong></summary><div class="check-grid">${items.slice(0,q?100:50).map(x=>`<label class="check-item"><input type="checkbox" data-sea="${x.name}" ${state.seasonings.includes(x.name)?"checked":""}>${x.name}</label>`).join("")}</div>${items.length>(q?100:50)?`<p class="fine">検索条件を追加すると残り${items.length-(q?100:50)}件も絞り込めます。</p>`:""}</details>`).join("")||'<div class="box">該当する調味料がありません。</div>';
  document.querySelectorAll("[data-sea]").forEach(c=>c.onchange=()=>{state.seasonings=c.checked?[...new Set([...state.seasonings,c.dataset.sea])]:state.seasonings.filter(x=>x!==c.dataset.sea);save();renderSeasoningAdvice();});
  renderSeasoningAdvice();
 }
 function renderSeasoningAdvice(){
  if(!state.seasonings.length){$("seasoningAdvice").textContent="調味料を選ぶと注意を表示します。";return}
- $("seasoningAdvice").innerHTML=state.seasonings.map(n=>{const x=seaObj(n),b=badge(x[1]),l=badge(x[2]),u=badge(x[3]);return `<article class="card"><h3>${n}</h3><p><span class="badge ${b[1]}">血糖 ${b[0]}</span><span class="badge ${l[1]}">肝臓 ${l[0]}</span><span class="badge ${u[1]}">尿酸 ${u[0]}</span></p><p><strong>注意：</strong>${x[4]}</p><p>${x[5]}</p></article>`}).join("");
+ $("seasoningAdvice").innerHTML=state.seasonings.map(n=>{const x=seaObj(n);if(!x)return `<article class="card"><h3>${n}</h3><p>旧バージョンの登録データです。再選択してください。</p></article>`;const b=badge(x.blood),l=badge(x.liver),u=badge(x.uric);return `<article class="card"><h3>${n}</h3><p><span class="badge ${b[1]}">血糖 ${b[0]}</span><span class="badge ${l[1]}">肝臓 ${l[0]}</span><span class="badge ${u[1]}">尿酸 ${u[0]}</span></p><p><strong>注意：</strong>${x.risk}</p><p>${x.advice}</p><p class="fine">${x.category}／${x.source}</p></article>`}).join("");
 }
 $("seasoningSearch").oninput=e=>renderSeasonings(e.target.value.trim());
 
@@ -83,7 +74,7 @@ function generateMeals(){
  const selected=[...new Set([...state.foods,...state.fridge.map(x=>x.name)])],t=Number($("timeLimit").value),purpose=$("purpose").value,expiring=state.fridge.filter(x=>daysTo(x.expiry)<=2).map(x=>x.name);
  let ranked=recipes.map(r=>{const matched=r.need.filter(x=>selected.includes(x)).length,missing=r.need.filter(x=>!selected.includes(x)),opt=r.opt.filter(x=>selected.includes(x)).length;let score=matched*5+opt*1.5-missing.length*2+(r.time<=t?2:-3);if(purpose==="tired"&&r.time<=15)score+=3;if(purpose==="sake"&&/鮭|タラ|サバ|豆腐|ブリ/.test(r.name))score+=2;if(purpose==="light"&&r.l>=5)score+=2;if(purpose==="useup"&&r.need.some(x=>expiring.includes(x)))score+=4;return {...r,score,missing};}).filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,6);
  state.generated=ranked;
- $("mealResults").innerHTML=ranked.length?ranked.map((r,i)=>{const ws=r.sea.map(seaObj).filter(Boolean).filter(x=>x[1]!=="good"||x[2]!=="good"||x[3]!=="good");return `<article class="card"><h3>${i+1}. ${r.name}</h3><p><span class="badge ${r.b>=4?"good":"warn"}">血糖 ${r.b}/5</span><span class="badge ${r.l>=4?"good":"warn"}">肝臓 ${r.l}/5</span><span class="badge ${r.u>=4?"good":"warn"}">尿酸 ${r.u}/5</span></p><p><strong>${r.time}分</strong>　${r.steps}</p><p><strong>調味料：</strong>${r.sea.join("、")}</p>${ws.length?`<p><strong>調味料注意：</strong>${ws.map(x=>`${x[0]}：${x[5]}`).join(" / ")}</p>`:""}${r.missing.length?`<p><strong>不足：</strong>${r.missing.join("、")}</p>`:""}<button class="secondary pick-meal" data-i="${i}">記録候補にする</button></article>`}).join(""):"<article class='card'>食材を2つ以上選んでください。</article>";
+ $("mealResults").innerHTML=ranked.length?ranked.map((r,i)=>{const ws=r.sea.map(seaObj).filter(Boolean).filter(x=>x.blood!=="good"||x.liver!=="good"||x.uric!=="good");return `<article class="card"><h3>${i+1}. ${r.name}</h3><p><span class="badge ${r.b>=4?"good":"warn"}">血糖 ${r.b}/5</span><span class="badge ${r.l>=4?"good":"warn"}">肝臓 ${r.l}/5</span><span class="badge ${r.u>=4?"good":"warn"}">尿酸 ${r.u}/5</span></p><p><strong>${r.time}分</strong>　${r.steps}</p><p><strong>調味料：</strong>${r.sea.join("、")}</p>${ws.length?`<p><strong>調味料注意：</strong>${ws.map(x=>`${x.name}：${x.advice}`).join(" / ")}</p>`:""}${r.missing.length?`<p><strong>不足：</strong>${r.missing.join("、")}</p>`:""}<button class="secondary pick-meal" data-i="${i}">記録候補にする</button></article>`}).join(""):"<article class='card'>食材を2つ以上選んでください。</article>";
  document.querySelectorAll(".pick-meal").forEach(b=>b.onclick=()=>{updateMealSelect(ranked[Number(b.dataset.i)].name);switchView("record");});
  updateMealSelect();
 }
