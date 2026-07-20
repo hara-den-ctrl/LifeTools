@@ -8,11 +8,11 @@
   <title>健康コンシェルジュ Ver0.8</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=0.8.0">
+  <link rel="stylesheet" href="./styles.css?v=0.8.1">
   <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
-  <script src="./seasoning-db.js?v=0.8.0" defer></script>
-  <script src="./app.js?v=0.8.0" defer></script>
+  <script src="./seasoning-db.js?v=0.8.1" defer></script>
+  <script src="./app.js?v=0.8.1" defer></script>
 </head>
 <body>
 <header class="topbar">
@@ -137,9 +137,9 @@
 
   <section id="seasonings" class="view">
     <div class="panel">
-      <div class="head-row"><div><small>カテゴリー別・1,000件</small><h2>調味料チェック</h2></div><span id="seasoningCount" class="state success">1,000件</span></div>
-      <input id="seasoningSearch" type="search" placeholder="商品名・種類で検索（例：めんつゆ、減塩）">
-      <p class="fine">カテゴリーを開いた時だけ候補を表示します。分類プロファイルは商品ラベルの代わりではありません。</p>
+      <div class="head-row"><div><small>市販商品・一般調味料</small><h2>調味料チェック</h2></div></div>
+      <input id="seasoningSearch" type="search" placeholder="調味料名・カテゴリーで検索">
+      <div class="seasoning-toolbar"><span id="seasoningCount">100件</span><button id="showFavorites" class="secondary small">★ お気に入り</button><button id="showRecent" class="secondary small">最近使った</button></div>
       <div id="seasoningList" class="seasoning-categories"></div>
     </div>
     <div class="panel">
@@ -236,9 +236,9 @@
       <h2>アプリ情報</h2>
       <dl class="app-info">
         <div><dt>アプリ名</dt><dd>健康コンシェルジュ</dd></div>
-        <div><dt>Version</dt><dd>0.7</dd></div>
+        <div><dt>Version</dt><dd>0.8</dd></div>
         <div><dt>Build</dt><dd>20260720</dd></div>
-        <div><dt>キャッシュ</dt><dd>healthtools-v0.7.0</dd></div>
+        <div><dt>キャッシュ</dt><dd>healthtools-v0.8.1</dd></div>
       </dl>
     </div>
 

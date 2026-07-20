@@ -1,12 +1,15 @@
 const VERSION="0.8";
-const BUILD="20260720";
+const BUILD="20260720-0801";
 const $=id=>document.getElementById(id);
-const LS={foods:"hc07.foods",seasonings:"hc07.seasonings",fridge:"hc07.fridge",records:"hc07.records",autoUpdate:"hc07.autoUpdate"};
+const LS={foods:"hc07.foods",seasonings:"hc07.seasonings",fridge:"hc07.fridge",records:"hc07.records",autoUpdate:"hc07.autoUpdate",favorites:"hc08.seasoningFavorites",recent:"hc08.seasoningRecent"};
 const state={
  foods:JSON.parse(localStorage.getItem(LS.foods)||"[]"),
  seasonings:JSON.parse(localStorage.getItem(LS.seasonings)||"[]"),
  fridge:JSON.parse(localStorage.getItem(LS.fridge)||"[]"),
  records:JSON.parse(localStorage.getItem(LS.records)||"[]"),
+ favorites:JSON.parse(localStorage.getItem(LS.favorites)||"[]"),
+ recent:JSON.parse(localStorage.getItem(LS.recent)||"[]"),
+ seasoningMode:"all",
  generated:[]
 };
 const foodData={
@@ -32,7 +35,7 @@ const allFoods=()=>Object.values(foodData).flat().map(x=>x[0]);
 const foodObj=n=>Object.values(foodData).flat().find(x=>x[0]===n);
 const seaObj=n=>seasoningData.find(x=>x.name===n);
 const badge=v=>v==="good"?["◎","good"]:v==="warn"?["△","warn"]:["×","bad"];
-const save=()=>{localStorage.setItem(LS.foods,JSON.stringify(state.foods));localStorage.setItem(LS.seasonings,JSON.stringify(state.seasonings));localStorage.setItem(LS.fridge,JSON.stringify(state.fridge));localStorage.setItem(LS.records,JSON.stringify(state.records));};
+const save=()=>{localStorage.setItem(LS.foods,JSON.stringify(state.foods));localStorage.setItem(LS.seasonings,JSON.stringify(state.seasonings));localStorage.setItem(LS.fridge,JSON.stringify(state.fridge));localStorage.setItem(LS.records,JSON.stringify(state.records));localStorage.setItem(LS.favorites,JSON.stringify(state.favorites));localStorage.setItem(LS.recent,JSON.stringify(state.recent));};
 function switchView(id){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.view===id));window.scrollTo({top:0,behavior:"smooth"});}
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>switchView(b.dataset.view));
 document.querySelectorAll(".jump").forEach(b=>b.onclick=()=>switchView(b.dataset.target));
@@ -55,18 +58,23 @@ $("clearFoods").onclick=()=>{state.foods=[];save();renderFoods($("foodSearch").v
 
 function renderSeasonings(filter=""){
  const q=filter.toLowerCase();
- const matched=seasoningData.filter(x=>!q||`${x.name} ${x.category}`.toLowerCase().includes(q));
+ let matched=seasoningData.filter(x=>!q||`${x.name} ${x.category}`.toLowerCase().includes(q));
+ if(state.seasoningMode==="favorites")matched=matched.filter(x=>state.favorites.includes(x.name));
+ if(state.seasoningMode==="recent")matched=state.recent.map(n=>matched.find(x=>x.name===n)).filter(Boolean);
  $("seasoningCount").textContent=`${matched.length.toLocaleString("ja-JP")}件`;
  const groups={};matched.forEach(x=>(groups[x.category]??=[]).push(x));
- $("seasoningList").innerHTML=Object.entries(groups).map(([category,items])=>`<details class="seasoning-category" ${q?"open":""}><summary><span>${category}</span><strong>${items.length}件</strong></summary><div class="check-grid">${items.slice(0,q?100:50).map(x=>`<label class="check-item"><input type="checkbox" data-sea="${x.name}" ${state.seasonings.includes(x.name)?"checked":""}>${x.name}</label>`).join("")}</div>${items.length>(q?100:50)?`<p class="fine">検索条件を追加すると残り${items.length-(q?100:50)}件も絞り込めます。</p>`:""}</details>`).join("")||'<div class="box">該当する調味料がありません。</div>';
- document.querySelectorAll("[data-sea]").forEach(c=>c.onchange=()=>{state.seasonings=c.checked?[...new Set([...state.seasonings,c.dataset.sea])]:state.seasonings.filter(x=>x!==c.dataset.sea);save();renderSeasoningAdvice();});
+ $("seasoningList").innerHTML=Object.entries(groups).map(([category,items])=>`<details class="seasoning-category" ${q||state.seasoningMode!=="all"?"open":""}><summary><span>${category}</span><strong>${items.length}件</strong></summary><div class="check-grid">${items.map(x=>`<label class="check-item seasoning-item"><input type="checkbox" data-sea="${x.name}" ${state.seasonings.includes(x.name)?"checked":""}><span>${x.name}</span><button type="button" class="favorite-btn ${state.favorites.includes(x.name)?"active":""}" data-fav="${x.name}" aria-label="お気に入り">★</button></label>`).join("")}</div></details>`).join("")||'<div class="box">該当する調味料がありません。</div>';
+ document.querySelectorAll("[data-sea]").forEach(c=>c.onchange=()=>{state.seasonings=c.checked?[...new Set([...state.seasonings,c.dataset.sea])]:state.seasonings.filter(x=>x!==c.dataset.sea);if(c.checked)state.recent=[c.dataset.sea,...state.recent.filter(x=>x!==c.dataset.sea)].slice(0,12);save();renderSeasoningAdvice();});
+ document.querySelectorAll("[data-fav]").forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();const n=b.dataset.fav;state.favorites=state.favorites.includes(n)?state.favorites.filter(x=>x!==n):[...state.favorites,n];save();renderSeasonings($("seasoningSearch").value.trim());});
  renderSeasoningAdvice();
 }
 function renderSeasoningAdvice(){
  if(!state.seasonings.length){$("seasoningAdvice").textContent="調味料を選ぶと注意を表示します。";return}
  $("seasoningAdvice").innerHTML=state.seasonings.map(n=>{const x=seaObj(n);if(!x)return `<article class="card"><h3>${n}</h3><p>旧バージョンの登録データです。再選択してください。</p></article>`;const b=badge(x.blood),l=badge(x.liver),u=badge(x.uric);return `<article class="card"><h3>${n}</h3><p><span class="badge ${b[1]}">血糖 ${b[0]}</span><span class="badge ${l[1]}">肝臓 ${l[0]}</span><span class="badge ${u[1]}">尿酸 ${u[0]}</span></p><p><strong>注意：</strong>${x.risk}</p><p>${x.advice}</p><p class="fine">${x.category}／${x.source}</p></article>`}).join("");
 }
-$("seasoningSearch").oninput=e=>renderSeasonings(e.target.value.trim());
+$("seasoningSearch").oninput=e=>{state.seasoningMode="all";renderSeasonings(e.target.value.trim());};
+$("showFavorites").onclick=()=>{state.seasoningMode=state.seasoningMode==="favorites"?"all":"favorites";renderSeasonings($("seasoningSearch").value.trim());};
+$("showRecent").onclick=()=>{state.seasoningMode=state.seasoningMode==="recent"?"all":"recent";renderSeasonings($("seasoningSearch").value.trim());};
 
 function renderSelected(){const merged=[...new Set([...state.foods,...state.fridge.map(x=>x.name)])];$("selectedSummary").textContent=merged.length?merged.join("、"):"未選択";}
 function daysTo(d){if(!d)return 999;const now=new Date();now.setHours(0,0,0,0);return Math.ceil((new Date(d+"T00:00:00")-now)/86400000);}

@@ -1,14 +1,15 @@
-健康コンシェルジュ Ver0.8
+Ver0.8 アップロード確認
 
-GitHubへ以下9ファイルをすべて上書きアップロードしてください。
-index.html
-app.js
-seasoning-db.js
-styles.css
-manifest.webmanifest
-service-worker.js
-version.json
-README.md
-icon.svg
+[ ] README.md
+[ ] UPLOAD_CHECK.txt
+[ ] app.js
+[ ] icon.svg
+[ ] index.html
+[ ] manifest.webmanifest
+[ ] seasoning-db.js  ← 新規・必須
+[ ] service-worker.js
+[ ] styles.css
+[ ] version.json
 
-アップロード後: https://hara-den-ctrl.github.io/LifeTools/?v=080
+確認URL:
+https://hara-den-ctrl.github.io/LifeTools/?v=081
