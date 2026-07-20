@@ -1,27 +1,29 @@
-健康コンシェルジュ Ver0.6 アップロード前検証
+健康コンシェルジュ Ver0.7 リリース検証
 
-OK index.html はHTML
-OK 画面右上にVer0.6
-OK フッターにVer0.6
-OK app.js はJavaScript
-OK README.md はMarkdown
-OK README.md はJSONではない
-OK manifest.webmanifest はJSON
-OK Service Workerキャッシュ名
-OK app.js にHTML混入なし
-OK index.html にapp.js混入なし
+OK index.htmlはHTML
+OK app.jsはJavaScript
+OK README.mdはMarkdown
+OK アイコンはルート配置
+OK version.jsonはVer0.7
+OK キャッシュ名はVer0.7
+OK Service Workerの更新キャッシュ無効
+OK version.jsonはno-store
+OK 即時更新処理
+OK Ver・Build表示
 
-先頭文字確認
+ファイル先頭
 index.html: <!doctype html>
-app.js: const VERSION="0.6";
-README.md: # 健康コンシェルジュ Ver0.6
+app.js: const VERSION="0.7";
+README.md: # 健康コンシェルジュ Ver0.7
 manifest.webmanifest: {
+version.json: {
 
 SHA-256
-README.md: 07faf035917d4b76a64f4f973d1fc288ade05235951253be0a9c5436b3709aa9
-app.js: 432962c4fcc39d9eb2cb8d72e5737b0f1f7ea42d5d1c007a6b43375ac9aeebc0
-assets/icon.svg: d46acac5d44783f313d96338d55e868f43c5cc82d4fbcaeab8b44af5959b7c49
-index.html: dc62c9399f1dbb925ac8caae15b20ab95df40cb75f296b1cd35fbd272086f771
-manifest.webmanifest: 4784f928a80e3bede936a8a9313622673ef462b5a3d28dc60ded690e51cfd1ba
-service-worker.js: ef18a8ec0737e8baee041916eba17929d6f1dc390e0c62c5684475d9fb598585
-styles.css: 862a3e6392a208dcc44f9f8d1acadc8d4e8bf36e6d17417f7347c30df7efa69a
+README.md: 77a5b86fc88f379a4cabc07fa555831355f37e9c89c39985bded1c0ae96f2a6a
+app.js: 0dad8a80175b3aa67c52c01f822a11202d0c9085ea549f5f040c8953ff2d832b
+icon.svg: d46acac5d44783f313d96338d55e868f43c5cc82d4fbcaeab8b44af5959b7c49
+index.html: 973a8b57ee8655b5ff77abe47b648def0288e3db42d20845f3ff5aceea2e24b2
+manifest.webmanifest: 1911448bffb21738889e57429c198d6e3d4093b17978e19decd432a84f059dd8
+service-worker.js: 6f4f1cbb214c5a4c90be2069ab25b59e46cb89a4e37d382dbd06e91f47c826fe
+styles.css: 42d1747c9e8c19af9711ab7d28ce666c54b375adb0d37143d7fac6dd6b36dfb1
+version.json: 5e2ac893bab599344425792ff188af00bcd22dea2d79655afa3e6116f218fd5d
