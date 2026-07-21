@@ -38,3 +38,6 @@ footer{text-align:center;color:var(--muted);font-size:.84rem;padding:0 18px 30px
 .meal-text-entry{margin:16px 0;padding:16px;border:1px solid #d8e7df;border-radius:14px;background:#f8fcfa}
 .meal-text-entry h3{margin-top:0}.meal-text-entry textarea{resize:vertical;min-height:76px}
 @media(max-width:700px){.search-action-row{display:grid;grid-template-columns:1fr}.search-action-row button{width:100%}}
+
+/* Ver0.9.1 履歴編集・削除 */
+.history-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:5px}.history-actions{display:flex;gap:7px;flex-shrink:0}.danger{border:1px solid #d65b52;background:#fff;color:#a52d25;border-radius:10px;font-weight:800;cursor:pointer}.edit-notice{margin:12px 0;padding:12px 14px;border:1px solid #e0b14d;border-radius:12px;background:#fff6dc;color:#73530d;font-weight:800}.record-save-actions{display:grid;grid-template-columns:1fr auto;gap:9px;align-items:stretch}.record-save-actions .secondary{min-width:150px}@media(max-width:560px){.history-head{display:block}.history-actions{margin-top:8px}.record-save-actions{grid-template-columns:1fr}.record-save-actions .secondary{width:100%}}

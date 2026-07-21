@@ -1,5 +1,5 @@
-const VERSION="0.9";
-const BUILD="20260721-0900";
+const VERSION="0.9.1";
+const BUILD="20260721-0910";
 const $=id=>document.getElementById(id);
 const LS={foods:"hc07.foods",seasonings:"hc07.seasonings",fridge:"hc07.fridge",records:"hc07.records",autoUpdate:"hc07.autoUpdate",favorites:"hc08.seasoningFavorites",recent:"hc08.seasoningRecent",foodHistory:"hc08.foodSearchHistory",aiHistory:"hc09.aiSearchHistory"};
 const state={
@@ -13,7 +13,8 @@ const state={
  foodHistory:JSON.parse(localStorage.getItem(LS.foodHistory)||"[]"),
  aiHistory:JSON.parse(localStorage.getItem(LS.aiHistory)||"[]"),
  lastLookup:null,
- generated:[]
+ generated:[],
+ editingRecordIndex:null
 };
 const foodData={
 "肉類":[["鶏むね肉","good","good","good","高たんぱく・低脂質。皮を外すとさらに良い。"],["鶏もも肉","good","warn","good","皮に脂質が多い。"],["豚ロース","good","warn","good","脂身を避ける。"],["豚こま","good","warn","good","赤身中心を選ぶ。"],["豚バラ","good","bad","good","脂質が多い。"],["牛赤身","good","warn","warn","量を控えめに。"],["レバー","good","warn","bad","プリン体が非常に多い。"]],
@@ -193,12 +194,48 @@ function renderMealTextAnalysis(){const text=[$("mealNameInput").value,$("mealFo
 $("analyzeMealText").onclick=renderMealTextAnalysis;
 
 function updateMealSelect(selected=""){const names=[...new Set([...state.generated.map(x=>x.name),...recipes.map(x=>x.name)])];$("mealSelect").innerHTML='<option value="">選択してください</option>'+names.map(n=>`<option ${n===selected?"selected":""}>${n}</option>`).join("");}
-$("saveRecord").onclick=()=>{const selected=$("mealSelect").value,name=$("mealNameInput").value.trim()||selected,foods=$("mealFoodsInput").value.trim(),extras=$("mealExtrasInput").value.trim(),memo=$("mealMemoInput").value.trim();if(!name&&!foods)return alert("献立名または食材を入力してください。");const a=renderMealTextAnalysis()||analyzeFreeText(name||foods),score=v=>v[1]==="good"?5:v[1]==="warn"?3:1;state.records.unshift({date:new Date().toISOString(),meal:name||"食事記録",foods,extras,memo,amount:$("mealAmountInput").value,mealTime:$("mealTimeInput").value,fullness:$("fullnessInput").value,b:score(a.b),l:score(a.l),u:score(a.u),trend:{hb:a.hb,alt:a.alt,ua:a.ua},water:$("water").checked,walk:$("walk").checked,sweat:$("sweat").checked,alcohol:$("alcohol").checked});save();renderRecords();renderPrediction();};
-$("clearRecords").onclick=()=>{if(confirm("履歴を削除しますか？")){state.records=[];save();renderRecords();renderPrediction();}};
+const recordFieldIds=["mealNameInput","mealFoodsInput","mealExtrasInput","mealMemoInput"];
+const selectFieldIds=["mealAmountInput","mealTimeInput","fullnessInput"];
+const checkFieldIds=["water","walk","sweat","alcohol"];
+function resetRecordForm(){
+ state.editingRecordIndex=null;
+ recordFieldIds.forEach(id=>$(id).value="");
+ $("mealSelect").value="";
+ $("mealAmountInput").value="normal";$("mealTimeInput").value="dinner";$("fullnessInput").value="normal";
+ checkFieldIds.forEach(id=>$(id).checked=false);
+ $("mealTextAnalysis").textContent="入力すると血糖・肝臓・尿酸への参考影響を表示します。";
+ $("saveRecord").textContent="記録へ追加";$("cancelRecordEdit").hidden=true;$("recordEditNotice").hidden=true;
+}
+function startRecordEdit(index){
+ const r=state.records[index];if(!r)return;
+ state.editingRecordIndex=index;
+ $("mealSelect").value=Array.from($("mealSelect").options).some(o=>o.value===r.meal)?r.meal:"";
+ $("mealNameInput").value=r.meal||"";$("mealFoodsInput").value=r.foods||"";$("mealExtrasInput").value=r.extras||"";$("mealMemoInput").value=r.memo||"";
+ $("mealAmountInput").value=r.amount||"normal";$("mealTimeInput").value=r.mealTime||"dinner";$("fullnessInput").value=r.fullness||"normal";
+ checkFieldIds.forEach(id=>$(id).checked=Boolean(r[id]));
+ $("saveRecord").textContent="更新してAI再判定";$("cancelRecordEdit").hidden=false;$("recordEditNotice").hidden=false;
+ renderMealTextAnalysis();switchView("record");window.scrollTo({top:0,behavior:"smooth"});
+}
+$("cancelRecordEdit").onclick=resetRecordForm;
+$("saveRecord").onclick=()=>{
+ const selected=$("mealSelect").value,name=$("mealNameInput").value.trim()||selected,foods=$("mealFoodsInput").value.trim(),extras=$("mealExtrasInput").value.trim(),memo=$("mealMemoInput").value.trim();
+ if(!name&&!foods)return alert("献立名または食材を入力してください。");
+ const a=renderMealTextAnalysis()||analyzeFreeText(name||foods),score=v=>v[1]==="good"?5:v[1]==="warn"?3:1;
+ const previous=state.editingRecordIndex===null?null:state.records[state.editingRecordIndex];
+ const record={date:previous?.date||new Date().toISOString(),updatedAt:previous?new Date().toISOString():undefined,meal:name||"食事記録",foods,extras,memo,amount:$("mealAmountInput").value,mealTime:$("mealTimeInput").value,fullness:$("fullnessInput").value,b:score(a.b),l:score(a.l),u:score(a.u),trend:{hb:a.hb,alt:a.alt,ua:a.ua},water:$("water").checked,walk:$("walk").checked,sweat:$("sweat").checked,alcohol:$("alcohol").checked};
+ if(state.editingRecordIndex===null)state.records.unshift(record);else state.records[state.editingRecordIndex]=record;
+ save();renderRecords();renderPrediction();resetRecordForm();
+};
+$("clearRecords").onclick=()=>{if(confirm("すべての履歴を削除しますか？この操作は元に戻せません。")){state.records=[];save();renderRecords();renderPrediction();resetRecordForm();}};
 function calcPrediction(){const base={h:Number($("baseHb").value||6),a:Number($("baseAlt").value||45),u:Number($("baseUa").value||6.9)},recent=state.records.slice(0,14);if(!recent.length)return {base,none:true};let sb=0,sl=0,su=0;for(const r of recent){sb+=(r.b-3)*.06+(r.walk?.04:0)+(r.alcohol?-.02:0);sl+=(r.l-3)*.7+(r.walk?.3:0)+(r.alcohol?-1.4:0);su+=(r.u-3)*.04+(r.water?.05:0)+(r.sweat&&!r.water?-.04:0)+(r.alcohol?-.08:0);}const n=recent.length,hd=Math.max(-.3,Math.min(.3,-sb/n)),ad=Math.max(-8,Math.min(8,-sl/n)),ud=Math.max(-.6,Math.min(.6,-su/n));return {base,h:[base.h+hd-.1,base.h+hd+.1],a:[Math.max(1,base.a+ad-3),base.a+ad+3],u:[Math.max(1,base.u+ud-.2),base.u+ud+.2],count:n};}
 function renderPrediction(){const p=calcPrediction();$("homeHb").textContent=p.base.h.toFixed(1);$("homeAlt").textContent=Math.round(p.base.a);$("homeUa").textContent=p.base.u.toFixed(1);if(p.none){$("prediction").innerHTML="<article class='prediction'>記録後に表示します。</article>";$("homeTrend").textContent="まだ記録がありません。";return}$("prediction").innerHTML=`<article class="prediction"><span>HbA1c参考</span><strong>${p.h[0].toFixed(1)}〜${p.h[1].toFixed(1)}</strong></article><article class="prediction"><span>ALT参考</span><strong>${Math.round(p.a[0])}〜${Math.round(p.a[1])}</strong></article><article class="prediction"><span>尿酸参考</span><strong>${p.u[0].toFixed(1)}〜${p.u[1].toFixed(1)}</strong></article>`;$("homeTrend").textContent=`直近${p.count}件からの参考傾向：HbA1c ${p.h[0].toFixed(1)}〜${p.h[1].toFixed(1)}、ALT ${Math.round(p.a[0])}〜${Math.round(p.a[1])}、尿酸 ${p.u[0].toFixed(1)}〜${p.u[1].toFixed(1)}`;}
 ["baseHb","baseAlt","baseUa"].forEach(id=>$(id).oninput=renderPrediction);
-function renderRecords(){$("recordHistory").innerHTML=state.records.length?state.records.map(r=>`<div class="history"><strong>${new Date(r.date).toLocaleString("ja-JP")}</strong><br>${r.meal}${r.foods?`<br><small>食材：${r.foods}</small>`:""}${r.extras?`<br><small>調味料・飲み物：${r.extras}</small>`:""}${r.trend?`<br><small>予測：HbA1c ${r.trend.hb}／ALT ${r.trend.alt}／尿酸 ${r.trend.ua}</small>`:""}${r.memo?`<br><small>メモ：${r.memo}</small>`:""}<br><small>水分:${r.water?"○":"－"} 歩行:${r.walk?"○":"－"} 発汗:${r.sweat?"○":"－"} 飲酒:${r.alcohol?"○":"－"}</small></div>`).join(""):"まだ記録がありません。";}
+const escapeHtml=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function renderRecords(){
+ $("recordHistory").innerHTML=state.records.length?state.records.map((r,i)=>`<div class="history"><div class="history-head"><strong>${new Date(r.date).toLocaleString("ja-JP")}</strong><div class="history-actions"><button type="button" class="secondary small edit-record" data-index="${i}">編集</button><button type="button" class="danger small delete-record" data-index="${i}">削除</button></div></div>${escapeHtml(r.meal)}${r.foods?`<br><small>食材：${escapeHtml(r.foods)}</small>`:""}${r.extras?`<br><small>調味料・飲み物：${escapeHtml(r.extras)}</small>`:""}${r.trend?`<br><small>予測：HbA1c ${escapeHtml(r.trend.hb)}／ALT ${escapeHtml(r.trend.alt)}／尿酸 ${escapeHtml(r.trend.ua)}</small>`:""}${r.memo?`<br><small>メモ：${escapeHtml(r.memo)}</small>`:""}<br><small>水分:${r.water?"○":"－"} 歩行:${r.walk?"○":"－"} 発汗:${r.sweat?"○":"－"} 飲酒:${r.alcohol?"○":"－"}${r.updatedAt?`　編集済み:${new Date(r.updatedAt).toLocaleString("ja-JP")}`:""}</small></div>`).join(""):"まだ記録がありません。";
+ document.querySelectorAll(".edit-record").forEach(b=>b.onclick=()=>startRecordEdit(Number(b.dataset.index)));
+ document.querySelectorAll(".delete-record").forEach(b=>b.onclick=()=>{const i=Number(b.dataset.index),r=state.records[i];if(!r)return;if(confirm(`「${r.meal||"食事記録"}」を削除しますか？\nこの操作は元に戻せません。`)){state.records.splice(i,1);if(state.editingRecordIndex===i)resetRecordForm();else if(state.editingRecordIndex!==null&&state.editingRecordIndex>i)state.editingRecordIndex--;save();renderRecords();renderPrediction();}});
+}
 
 
 // ----- 自動更新 -----

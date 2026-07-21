@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#147a52">
-  <meta name="description" content="健康コンシェルジュ Ver0.9">
-  <title>健康コンシェルジュ Ver0.9</title>
+  <meta name="description" content="健康コンシェルジュ Ver0.9.1">
+  <title>健康コンシェルジュ Ver0.9.1</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=0.9.0">
-  <script src="./seasoning-db.js?v=0.9.0" defer></script>
-  <script src="./app.js?v=0.9.0" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=0.9.1">
+  <script src="./seasoning-db.js?v=0.9.1" defer></script>
+  <script src="./app.js?v=0.9.1" defer></script>
 </head>
 <body>
 <header class="topbar">
@@ -18,7 +18,7 @@
     <small>LifeTools / HealthTools</small>
     <h1>🍃 健康コンシェルジュ</h1>
   </div>
-  <button class="version-badge jump" data-target="settings" aria-label="アプリ情報を開く">Ver0.9</button>
+  <button class="version-badge jump" data-target="settings" aria-label="アプリ情報を開く">Ver0.9.1</button>
 </header>
 
 <div id="updateBanner" class="update-banner" hidden>
@@ -216,7 +216,8 @@
         <button id="analyzeMealText" type="button" class="secondary full">入力内容から予測を確認</button>
         <div id="mealTextAnalysis" class="box">入力すると血糖・肝臓・尿酸への参考影響を表示します。</div>
       </div>
-      <button id="saveRecord" class="primary full">記録へ追加</button>
+      <div id="recordEditNotice" class="edit-notice" hidden>履歴を編集中です。保存時に入力内容からAI再判定し、同じ履歴を更新します。</div>
+      <div class="record-save-actions"><button id="saveRecord" class="primary full">記録へ追加</button><button id="cancelRecordEdit" type="button" class="secondary" hidden>編集をキャンセル</button></div>
     </div>
 
     <div class="panel">
@@ -242,21 +243,25 @@
         <div><strong>今すぐ最新版を確認</strong><p>GitHub上のversion.jsonをキャッシュせず確認します。</p></div>
         <button id="manualUpdateCheck" class="secondary">更新確認</button>
       </div>
-      <div id="updateStatus" class="box">現在 Ver0.9</div>
+      <div id="updateStatus" class="box">現在 Ver0.9.1</div>
     </div>
 
     <div class="panel">
       <h2>アプリ情報</h2>
       <dl class="app-info">
         <div><dt>アプリ名</dt><dd>健康コンシェルジュ</dd></div>
-        <div><dt>Version</dt><dd>0.9</dd></div>
-        <div><dt>Build</dt><dd>20260721</dd></div>
-        <div><dt>キャッシュ</dt><dd>healthtools-v0.9.0</dd></div>
+        <div><dt>Version</dt><dd>0.9.1</dd></div>
+        <div><dt>Build</dt><dd>20260721-0910</dd></div>
+        <div><dt>キャッシュ</dt><dd>healthtools-v0.9.1</dd></div>
       </dl>
     </div>
 
     <div class="panel">
       <h2>更新履歴</h2>
+      <article class="release">
+        <strong>Ver0.9.1</strong>
+        <p>履歴の編集・AI再判定、個別削除（確認ダイアログ付き）を追加。既存機能を維持。</p>
+      </article>
       <article class="release">
         <strong>Ver0.9</strong>
         <p>調味料カテゴリー表示に加え、自由入力の食材検索、AI参考回答、検索食材からの献立連携を追加。</p>
@@ -270,8 +275,8 @@
 </main>
 
 <footer>
-  <strong>健康コンシェルジュ Ver0.9</strong><br>
-  Build 20260721
+  <strong>健康コンシェルジュ Ver0.9.1</strong><br>
+  Build 20260721-0910
 </footer>
 </body>
 </html>

@@ -1,10 +1,7 @@
-健康コンシェルジュ Ver0.8 Revision 0.8.2
+健康コンシェルジュ Ver0.9.1 アップロード確認
 
-GitHubのリポジトリ直下へ、このフォルダー内の10ファイルをすべて上書きしてください。
-
-確認項目:
-1. app.js の先頭が BUILD 20260720-0802
-2. service-worker.js の CACHE が healthtools-v0.8.2
-3. version.json の revision が 0.8.2
-4. 食材画面に「食材情報検索・AI回答」が表示
-5. 野菜チェック欄に「ジャガイモ」「長芋」が表示
+1. ZIPを展開し、すべてのファイルをGitHub Pagesの公開フォルダへ上書きしてください。
+2. index.html / app.js / styles.css の参照は v=0.9.1 です。
+3. service-worker.js の CACHE は healthtools-v0.9.1 です。
+4. version.json の version は 0.9.1 です。
+5. 更新後に旧画面が残る場合は、アプリの更新確認またはブラウザ再読み込みを行ってください。
