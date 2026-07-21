@@ -4,15 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#147a52">
-  <meta name="description" content="健康コンシェルジュ Ver0.8.3">
-  <title>健康コンシェルジュ Ver0.8.3</title>
+  <meta name="description" content="健康コンシェルジュ Ver0.9">
+  <title>健康コンシェルジュ Ver0.9</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=0.8.3">
-  <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
-  <script src="./seasoning-db.js?v=0.8.3" defer></script>
-  <script src="./app.js?v=0.8.3" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=0.9.0">
+  <script src="./seasoning-db.js?v=0.9.0" defer></script>
+  <script src="./app.js?v=0.9.0" defer></script>
 </head>
 <body>
 <header class="topbar">
@@ -20,7 +18,7 @@
     <small>LifeTools / HealthTools</small>
     <h1>🍃 健康コンシェルジュ</h1>
   </div>
-  <button class="version-badge jump" data-target="settings" aria-label="アプリ情報を開く">Ver0.8.3</button>
+  <button class="version-badge jump" data-target="settings" aria-label="アプリ情報を開く">Ver0.9</button>
 </header>
 
 <div id="updateBanner" class="update-banner" hidden>
@@ -55,7 +53,7 @@
     <button class="tab" data-view="seasonings">調味料</button>
     <button class="tab" data-view="fridge">冷蔵庫</button>
     <button class="tab" data-view="record">記録</button>
-    <button class="tab" data-view="scan">OCR・バーコード</button>
+    <button class="tab" data-view="aiSearch">AI検索</button>
     <button class="tab" data-view="settings">設定</button>
   </nav>
 
@@ -78,18 +76,31 @@
     <div class="panel">
       <h2>今日の操作</h2>
       <div class="quick-grid">
-        <button class="quick jump focus-food-search" data-target="foods">🔎 食材を検索</button>
+        <button class="quick jump focus-ai-search" data-target="aiSearch">✨ AI検索・判定</button>
         <button class="quick jump" data-target="chef">🤖 献立を作る</button>
         <button class="quick jump" data-target="seasonings">🧂 調味料を確認</button>
         <button class="quick jump" data-target="fridge">🧊 冷蔵庫を確認</button>
         <button class="quick jump" data-target="record">✅ 食事を記録</button>
-        <button class="quick jump" data-target="scan">📷 商品を確認</button>
+        <button class="quick jump" data-target="record">✍️ 食べた内容を入力</button>
       </div>
     </div>
 
     <div class="panel">
       <h2>現在の予測傾向</h2>
       <div id="homeTrend" class="box">まだ記録がありません。</div>
+    </div>
+  </section>
+
+  <section id="aiSearch" class="view">
+    <div class="panel ai-search-panel">
+      <div class="head-row"><div><small>食材名・商品名・食べ方を自由入力</small><h2>AI検索・健康判定</h2></div></div>
+      <p>例：「オイコス」「ミックスナッツ」「じゃがいも150g」「日本酒1合と刺身」のように入力してください。</p>
+      <div class="search-action-row">
+        <input id="aiSearchInput" type="search" placeholder="食品・商品・食べた内容を入力" enterkeyhint="search">
+        <button id="aiSearchButton" class="primary">AI判定</button>
+      </div>
+      <div id="aiSearchHistory" class="chip-row"></div>
+      <div id="aiSearchResult" class="box ai-search-result">入力内容から、血糖・肝臓・尿酸への影響と食べ方の注意を表示します。</div>
     </div>
   </section>
 
@@ -178,72 +189,45 @@
 
   <section id="record" class="view">
     <div class="panel">
-      <div class="head-row"><div><small>食事内容を詳しく入力</small><h2>食事記録・影響予測</h2></div></div>
+      <h2>健康記録</h2>
       <div class="form-grid three">
-        <label>現在のHbA1c<input id="baseHb" type="number" value="6.0" step="0.1" min="3" max="20"></label>
-        <label>現在のALT<input id="baseAlt" type="number" value="45" step="1" min="1" max="1000"></label>
-        <label>現在の尿酸値<input id="baseUa" type="number" value="6.9" step="0.1" min="1" max="20"></label>
+        <label>HbA1c<input id="baseHb" type="number" value="6.0" step="0.1"></label>
+        <label>ALT<input id="baseAlt" type="number" value="45" step="1"></label>
+        <label>尿酸<input id="baseUa" type="number" value="6.9" step="0.1"></label>
       </div>
-      <hr class="divider">
-      <label>食べた献立名<input id="mealName" type="text" maxlength="80" placeholder="例：鶏むね肉の照り焼き定食"></label>
-      <label>AI献立候補から選ぶ（任意）<select id="mealSelect"><option value="">選択してください</option></select></label>
-      <label>食材名と量<textarea id="foodAmount" rows="4" maxlength="500" placeholder="例：鶏むね肉150g、白ご飯150g、キャベツ100g"></textarea></label>
-      <div class="form-grid">
-        <label>調味料<input id="recordSeasonings" type="text" maxlength="200" placeholder="例：しょうゆ小さじ2、みりん小さじ1"></label>
-        <label>飲み物<input id="drinks" type="text" maxlength="200" placeholder="例：水500ml、無糖コーヒー1杯"></label>
-      </div>
-      <div class="form-grid three">
-        <label>飲酒量<input id="alcoholAmount" type="text" maxlength="100" placeholder="例：ビール500ml、日本酒1合"></label>
-        <label>食事量<select id="mealAmount"><option value="small">少なめ</option><option value="normal" selected>普通</option><option value="large">多め</option><option value="veryLarge">かなり多い</option></select></label>
-        <label>食事区分<select id="mealType"><option value="breakfast">朝食</option><option value="lunch">昼食</option><option value="dinner" selected>夕食</option><option value="snack">間食・夜食</option></select></label>
-      </div>
-      <label>満腹度 <span id="fullnessValue">7 / 10</span><input id="fullness" type="range" min="1" max="10" value="7"></label>
       <div class="daily-grid">
         <label><input id="water" type="checkbox"> 水分を十分とった</label>
-        <label><input id="walk" type="checkbox"> 食後を含め20分以上歩いた</label>
+        <label><input id="walk" type="checkbox"> 20分以上歩いた</label>
         <label><input id="sweat" type="checkbox"> 発汗を伴う活動</label>
-        <label><input id="lateMeal" type="checkbox"> 就寝2時間以内の食事</label>
+        <label><input id="alcohol" type="checkbox"> 飲酒した</label>
       </div>
-      <label>自由メモ<textarea id="recordMemo" rows="4" maxlength="1000" placeholder="体調、食後の眠気、外食、服薬など自由に記録"></textarea></label>
-      <button id="previewRecord" class="secondary full">入力内容から予測する</button>
-      <div id="currentImpact" class="impact-grid"></div>
-      <button id="saveRecord" class="primary full">入力内容と予測結果を履歴保存</button>
+      <label>食べた献立（候補から選択）<select id="mealSelect"><option value="">選択してください</option></select></label>
+      <div class="meal-text-entry">
+        <h3>食べた内容をテキスト入力</h3>
+        <label>献立名<input id="mealNameInput" type="text" placeholder="例：肉じゃが、焼き魚定食"></label>
+        <label>食材名と量<textarea id="mealFoodsInput" rows="4" placeholder="例：じゃがいも150g、牛肉80g、玉ねぎ半分、白ご飯150g"></textarea></label>
+        <label>調味料・飲み物・飲酒量<textarea id="mealExtrasInput" rows="3" placeholder="例：しょうゆ大さじ1、砂糖小さじ2、日本酒1合"></textarea></label>
+        <div class="form-grid three">
+          <label>食事量<select id="mealAmountInput"><option value="small">少なめ</option><option value="normal" selected>普通</option><option value="large">多め</option></select></label>
+          <label>食事区分<select id="mealTimeInput"><option value="breakfast">朝食</option><option value="lunch">昼食</option><option value="dinner" selected>夕食</option><option value="snack">間食・夜食</option></select></label>
+          <label>満腹度<select id="fullnessInput"><option value="light">腹八分未満</option><option value="normal" selected>腹八分程度</option><option value="full">満腹</option></select></label>
+        </div>
+        <label>自由メモ<textarea id="mealMemoInput" rows="3" placeholder="例：汁は半分残した、野菜から食べた"></textarea></label>
+        <button id="analyzeMealText" type="button" class="secondary full">入力内容から予測を確認</button>
+        <div id="mealTextAnalysis" class="box">入力すると血糖・肝臓・尿酸への参考影響を表示します。</div>
+      </div>
+      <button id="saveRecord" class="primary full">記録へ追加</button>
     </div>
 
     <div class="panel">
-      <h2>HbA1c・ALT・尿酸値の予測傾向</h2>
+      <h2>予測レンジ</h2>
       <div id="prediction" class="prediction-grid"></div>
-      <p class="fine">食事内容と生活記録からの簡易的な傾向推定です。血液検査値そのものを診断・予測・保証する機能ではありません。</p>
+      <p class="fine">生活記録からの簡易推定です。実際の血液検査値を予測・保証するものではありません。</p>
     </div>
 
     <div class="panel">
-      <div class="head-row"><h2>食事・予測履歴</h2><button id="clearRecords" class="secondary small">履歴削除</button></div>
+      <div class="head-row"><h2>履歴</h2><button id="clearRecords" class="secondary small">履歴削除</button></div>
       <div id="recordHistory">まだ記録がありません。</div>
-    </div>
-  </section>
-
-  <section id="scan" class="view">
-    <div class="scan-grid">
-      <div class="panel">
-        <div class="head-row"><h2>バーコード</h2><span id="barcodeState" class="state idle">待機中</span></div>
-        <div class="camera"><video id="barcodeVideo" playsinline muted></video><div class="guide"></div></div>
-        <div id="barcodeMessage" class="box">カメラを起動してください。</div>
-        <div class="button-row"><button id="startScan" class="primary">起動</button><button id="stopScan" class="secondary">停止</button></div>
-        <div id="barcodeResult" class="box">まだ読み取っていません。</div>
-      </div>
-
-      <div class="panel">
-        <div class="head-row"><h2>原材料OCR</h2><span id="ocrState" class="state idle">待機中</span></div>
-        <label class="filebox">原材料画像を撮影<input id="photoInput" type="file" accept="image/*" capture="environment"></label>
-        <img id="preview" class="preview" hidden alt="撮影画像">
-        <canvas id="workCanvas" hidden></canvas>
-        <div id="ocrMessage" class="box">画像を選択してください。</div>
-        <div id="ocrProgressWrap" class="progress" hidden><div id="ocrProgressBar"></div></div>
-        <button id="runOcr" class="primary full">文字を読み取る</button>
-        <textarea id="ocrText" rows="8" placeholder="OCR結果"></textarea>
-        <button id="judgeOcr" class="secondary full">健康判定</button>
-        <div id="ocrResult" class="box">まだ判定していません。</div>
-      </div>
     </div>
   </section>
 
@@ -258,24 +242,23 @@
         <div><strong>今すぐ最新版を確認</strong><p>GitHub上のversion.jsonをキャッシュせず確認します。</p></div>
         <button id="manualUpdateCheck" class="secondary">更新確認</button>
       </div>
-      <div id="updateStatus" class="box">現在 Ver0.8.3</div>
+      <div id="updateStatus" class="box">現在 Ver0.9</div>
     </div>
 
     <div class="panel">
       <h2>アプリ情報</h2>
       <dl class="app-info">
         <div><dt>アプリ名</dt><dd>健康コンシェルジュ</dd></div>
-        <div><dt>Version</dt><dd>0.8.3</dd></div>
-        <div><dt>Build</dt><dd>20260720-0830</dd></div>
-        <div><dt>キャッシュ</dt><dd>healthtools-v0.8.3</dd></div>
+        <div><dt>Version</dt><dd>0.9</dd></div>
+        <div><dt>Build</dt><dd>20260721</dd></div>
+        <div><dt>キャッシュ</dt><dd>healthtools-v0.9.0</dd></div>
       </dl>
     </div>
 
     <div class="panel">
       <h2>更新履歴</h2>
-      <article class="release"><strong>Ver0.8.3</strong><p>献立・食材量・調味料・飲み物・飲酒量・食事量・区分・満腹度・メモを記録し、血糖・肝臓・尿酸への影響と3指標の予測傾向を履歴保存。</p></article>
       <article class="release">
-        <strong>Ver0.8.3</strong>
+        <strong>Ver0.9</strong>
         <p>調味料カテゴリー表示に加え、自由入力の食材検索、AI参考回答、検索食材からの献立連携を追加。</p>
       </article>
       <article class="release">
@@ -287,8 +270,8 @@
 </main>
 
 <footer>
-  <strong>健康コンシェルジュ Ver0.8.3</strong><br>
-  Build 20260720
+  <strong>健康コンシェルジュ Ver0.9</strong><br>
+  Build 20260721
 </footer>
 </body>
 </html>

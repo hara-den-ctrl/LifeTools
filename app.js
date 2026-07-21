@@ -1,7 +1,7 @@
-const VERSION="0.8.3";
-const BUILD="20260720-0830";
+const VERSION="0.9";
+const BUILD="20260721-0900";
 const $=id=>document.getElementById(id);
-const LS={foods:"hc07.foods",seasonings:"hc07.seasonings",fridge:"hc07.fridge",records:"hc07.records",autoUpdate:"hc07.autoUpdate",favorites:"hc08.seasoningFavorites",recent:"hc08.seasoningRecent",foodHistory:"hc08.foodSearchHistory"};
+const LS={foods:"hc07.foods",seasonings:"hc07.seasonings",fridge:"hc07.fridge",records:"hc07.records",autoUpdate:"hc07.autoUpdate",favorites:"hc08.seasoningFavorites",recent:"hc08.seasoningRecent",foodHistory:"hc08.foodSearchHistory",aiHistory:"hc09.aiSearchHistory"};
 const state={
  foods:JSON.parse(localStorage.getItem(LS.foods)||"[]"),
  seasonings:JSON.parse(localStorage.getItem(LS.seasonings)||"[]"),
@@ -11,6 +11,7 @@ const state={
  recent:JSON.parse(localStorage.getItem(LS.recent)||"[]"),
  seasoningMode:"all",
  foodHistory:JSON.parse(localStorage.getItem(LS.foodHistory)||"[]"),
+ aiHistory:JSON.parse(localStorage.getItem(LS.aiHistory)||"[]"),
  lastLookup:null,
  generated:[]
 };
@@ -59,10 +60,42 @@ function lookupFood(name){
 }
 const seaObj=n=>seasoningData.find(x=>x.name===n);
 const badge=v=>v==="good"?["◎","good"]:v==="warn"?["△","warn"]:["×","bad"];
-const save=()=>{localStorage.setItem(LS.foods,JSON.stringify(state.foods));localStorage.setItem(LS.seasonings,JSON.stringify(state.seasonings));localStorage.setItem(LS.fridge,JSON.stringify(state.fridge));localStorage.setItem(LS.records,JSON.stringify(state.records));localStorage.setItem(LS.favorites,JSON.stringify(state.favorites));localStorage.setItem(LS.recent,JSON.stringify(state.recent));localStorage.setItem(LS.foodHistory,JSON.stringify(state.foodHistory));};
+const save=()=>{localStorage.setItem(LS.foods,JSON.stringify(state.foods));localStorage.setItem(LS.seasonings,JSON.stringify(state.seasonings));localStorage.setItem(LS.fridge,JSON.stringify(state.fridge));localStorage.setItem(LS.records,JSON.stringify(state.records));localStorage.setItem(LS.favorites,JSON.stringify(state.favorites));localStorage.setItem(LS.recent,JSON.stringify(state.recent));localStorage.setItem(LS.foodHistory,JSON.stringify(state.foodHistory));localStorage.setItem(LS.aiHistory,JSON.stringify(state.aiHistory));};
 function switchView(id){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("active",v.id===id));document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.view===id));window.scrollTo({top:0,behavior:"smooth"});}
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>switchView(b.dataset.view));
 document.querySelectorAll(".jump").forEach(b=>b.onclick=()=>switchView(b.dataset.target));
+
+
+const aiProductHints=[
+ {keys:["オイコス","oikos"],name:"オイコス（高たんぱくヨーグルト）",category:"乳製品",blood:"good",liver:"good",uric:"good",portion:"1個",note:"無糖・低糖タイプは高たんぱくで取り入れやすいです。フレーバー品は糖質表示を確認してください。"},
+ {keys:["パルテノ"],name:"パルテノ（ギリシャヨーグルト）",category:"乳製品",blood:"good",liver:"good",uric:"good",portion:"1個",note:"無糖タイプを優先し、はちみつやソースの追加量に注意してください。"},
+ {keys:["ミックスナッツ","ナッツ","アーモンド","くるみ","カシューナッツ"],name:"ミックスナッツ",category:"種実類",blood:"good",liver:"warn",uric:"good",portion:"20〜25g",note:"糖質は比較的少なめですが脂質とエネルギーは高めです。無塩タイプを少量に。"},
+ {keys:["しょうゆ","醤油"],name:"しょうゆ",category:"調味料",blood:"good",liver:"good",uric:"good",portion:"小さじ1〜2",note:"主な注意点は塩分です。かけるより小皿で少量使う方が調整しやすいです。"},
+ {keys:["ビール"],name:"ビール",category:"酒類",blood:"warn",liver:"bad",uric:"bad",portion:"できれば控える／飲むなら少量",note:"アルコールとプリン体の両面で肝臓・尿酸に注意が必要です。"},
+ {keys:["日本酒","清酒"],name:"日本酒",category:"酒類",blood:"warn",liver:"bad",uric:"warn",portion:"1合以下を目安に休肝日を設定",note:"糖質とアルコールを含みます。飲酒量と頻度を記録してください。"},
+ {keys:["ラーメン"],name:"ラーメン",category:"麺類",blood:"bad",liver:"warn",uric:"warn",portion:"麺少なめ・スープを残す",note:"糖質・脂質・塩分が重なりやすい食品です。野菜や卵を足し、スープは控えめに。"},
+ {keys:["カレー"],name:"カレーライス",category:"主食・料理",blood:"bad",liver:"warn",uric:"good",portion:"ご飯120〜150g、ルー少なめ",note:"ご飯とルーで糖質・脂質が増えやすいです。野菜と赤身肉を増やしてください。"}
+];
+function analyzeFreeText(raw){
+ const text=String(raw||"").trim();
+ let found=aiProductHints.find(x=>x.keys.some(k=>text.toLowerCase().includes(k.toLowerCase())));
+ if(!found){const food=lookupFood(text.replace(/[0-9０-９]+\s*(g|ｇ|グラム|個|枚|本|ml|mL|合).*/i,"").trim());found={...food};}
+ let bs=found.blood==="bad"?2:found.blood==="warn"?1:0, ls=found.liver==="bad"?2:found.liver==="warn"?1:0, us=found.uric==="bad"?2:found.uric==="warn"?1:0;
+ if(/大盛|特盛|食べ放題|満腹/.test(text)){bs++;ls++;}
+ if(/揚げ|フライ|唐揚げ|天ぷら|脂身|マヨネーズ/.test(text))ls++;
+ if(/砂糖|ジュース|コーラ|菓子|ケーキ|アイス/.test(text))bs++;
+ if(/レバー|白子|あん肝|煮干し|干物|いわし|かつお|ホルモン/.test(text))us+=2;
+ if(/日本酒|ビール|焼酎|ワイン|アルコール|飲酒/.test(text)){ls+=2;us++;bs+=.5;}
+ const level=s=>s>=2?["× 注意","bad"]:s>=1?["△ やや注意","warn"]:["◎ 良好","good"];
+ const b=level(bs),l=level(ls),u=level(us);
+ const hb=bs>=2?"+0.1〜+0.2":bs>=1?"±0〜+0.1":"-0.1〜±0";
+ const alt=ls>=2?"+3〜+8 U/L":ls>=1?"±0〜+3 U/L":"-3〜±0 U/L";
+ const ua=us>=2?"+0.2〜+0.5 mg/dL":us>=1?"±0〜+0.2 mg/dL":"-0.2〜±0 mg/dL";
+ return {...found,input:text,b,l,u,hb,alt,ua};
+}
+function renderAiHistory(){const e=$("aiSearchHistory");if(!e)return;e.innerHTML=state.aiHistory.length?`<span class="history-label">最近：</span>${state.aiHistory.map(x=>`<button class="food-chip" data-ai-history="${x.replace(/"/g,"&quot;")}">${x}</button>`).join("")}`:"";document.querySelectorAll("[data-ai-history]").forEach(b=>b.onclick=()=>{$("aiSearchInput").value=b.dataset.aiHistory;runAiSearch();});}
+function runAiSearch(){const q=$("aiSearchInput").value.trim();if(!q)return alert("食品名や食べた内容を入力してください。");const r=analyzeFreeText(q);state.aiHistory=[q,...state.aiHistory.filter(x=>x!==q)].slice(0,8);save();renderAiHistory();$("aiSearchResult").innerHTML=`<article class="lookup-card"><small>${r.category||"AI簡易判定"}</small><h3>${r.name||q}</h3><p><span class="badge ${r.b[1]}">血糖 ${r.b[0]}</span><span class="badge ${r.l[1]}">肝臓 ${r.l[0]}</span><span class="badge ${r.u[1]}">尿酸 ${r.u[0]}</span></p><p><strong>目安：</strong>${r.portion||"量を決めて食べる"}</p><p>${r.note||"入力内容から一般的な特徴を簡易判定しました。"}</p><section class="ai-answer"><h4>🤖 AI参考回答</h4><p>現在の登録値（HbA1c ${Number($("baseHb").value||6).toFixed(1)}、ALT ${Math.round(Number($("baseAlt").value||45))}、尿酸 ${Number($("baseUa").value||6.9).toFixed(1)}）を踏まえると、食べる量・調理法・飲酒の有無を合わせて判断する必要があります。${r.note||""}</p></section><div class="prediction-grid"><article><span>HbA1c傾向</span><strong>${r.hb}</strong></article><article><span>ALT傾向</span><strong>${r.alt}</strong></article><article><span>尿酸傾向</span><strong>${r.ua}</strong></article></div><p class="fine">※端末内の登録データと入力語句による参考判定です。商品ごとの正確な栄養成分は商品表示を確認してください。</p><div class="lookup-actions"><button id="aiToRecord" class="primary">この内容を食事記録へ</button></div></article>`;$("aiToRecord").onclick=()=>{$("mealNameInput").value=r.name||q;$("mealFoodsInput").value=q;switchView("record");setTimeout(renderMealTextAnalysis,100);};}
+$("aiSearchButton").onclick=runAiSearch;$("aiSearchInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();runAiSearch();}});document.querySelectorAll(".focus-ai-search").forEach(b=>b.addEventListener("click",()=>setTimeout(()=>$("aiSearchInput").focus(),200)));
 
 function renderFoods(filter=""){
  const root=$("foodGroups");root.innerHTML="";
@@ -155,73 +188,18 @@ function renderFridge(){
 $("addFridge").onclick=()=>{if(!$("fridgeExpiry").value)return alert("期限を入力してください。");state.fridge.push({name:$("fridgeFood").value,expiry:$("fridgeExpiry").value});save();renderFridge();};
 $("clearFridge").onclick=()=>{if(confirm("冷蔵庫登録を削除しますか？")){state.fridge=[];save();renderFridge();}};
 
-function updateMealSelect(selected=""){const names=[...new Set([...state.generated.map(x=>x.name),...recipes.map(x=>x.name)])];$("mealSelect").innerHTML='<option value="">選択してください</option>'+names.map(n=>`<option ${n===selected?"selected":""}>${n}</option>`).join("");if(selected)$("mealName").value=selected;}
-const esc=value=>String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
-const level=(score,goodLimit=0,warnLimit=3)=>score<=goodLimit?{key:"good",label:"低め",mark:"◎"}:score<=warnLimit?{key:"warn",label:"やや注意",mark:"△"}:{key:"bad",label:"注意",mark:"×"};
-function textSignals(text){
- const t=String(text||"").toLowerCase();
- const count=words=>words.reduce((n,w)=>n+(t.includes(w)?1:0),0);
- return {
-  sugar:count(["砂糖","糖","シロップ","ジュース","清涼飲料","菓子","ケーキ","アイス","白ご飯","丼","麺","パン","じゃがいも","長芋","さつまいも"]),
-  fat:count(["揚げ","フライ","天ぷら","唐揚げ","脂","バター","マヨネーズ","生クリーム","豚バラ","ラーメン"]),
-  purine:count(["レバー","内臓","煮干","干物","いわし","かつお","マグロ","エビ","イカ","貝","ビール"]),
-  salt:count(["しょうゆ","醤油","味噌","みそ","塩","めんつゆ","ラーメン","漬物"]),
-  fiber:count(["野菜","キャベツ","ブロッコリー","きのこ","海藻","豆腐","納豆","こんにゃく","玄米"])
- };
-}
-function collectRecordInput(){
- const meal=($("mealName").value||$("mealSelect").value).trim();
- return {date:new Date().toISOString(),meal,foods:$("foodAmount").value.trim(),seasonings:$("recordSeasonings").value.trim(),drinks:$("drinks").value.trim(),alcoholAmount:$("alcoholAmount").value.trim(),mealAmount:$("mealAmount").value,mealType:$("mealType").value,fullness:Number($("fullness").value),water:$("water").checked,walk:$("walk").checked,sweat:$("sweat").checked,lateMeal:$("lateMeal").checked,memo:$("recordMemo").value.trim()};
-}
-function predictImpact(input){
- const sig=textSignals([input.meal,input.foods,input.seasonings,input.drinks,input.alcoholAmount].join(" "));
- const amount={small:-1,normal:0,large:2,veryLarge:4}[input.mealAmount]||0;
- const alcohol=input.alcoholAmount?Math.max(2,/日本酒\s*([2-9]|\d{2})合|ビール\s*(?:[7-9]\d{2}|\d{4,})|ワイン\s*(?:[4-9]\d{2}|\d{4,})/i.test(input.alcoholAmount)?5:3):0;
- let blood=sig.sugar*1.25+amount+(input.fullness>=9?2:input.fullness>=8?1:0)+(input.mealType==="snack"?1:0)+(input.lateMeal?1.5:0)-sig.fiber*.45-(input.walk?1.4:0);
- let liver=sig.fat*1.3+alcohol+amount*.65+(input.lateMeal?1:0)-(input.walk?.7:0)-(input.sweat?.5:0);
- let uric=sig.purine*1.35+alcohol+amount*.45+(input.sweat&&!input.water?1.2:0)-(input.water?1.2:0);
- blood=Math.max(0,Math.min(10,blood));liver=Math.max(0,Math.min(10,liver));uric=Math.max(0,Math.min(10,uric));
- const reasons={
-  blood:[sig.sugar?"糖質・甘味・主食系の記載":"糖質の強い記載は少なめ",amount>0?"食事量が多め":"食事量は普通以下",input.walk?"歩行による軽減要素":"歩行記録なし",input.lateMeal?"就寝前の食事":""].filter(Boolean),
-  liver:[sig.fat?"脂質・揚げ物系の記載":"脂質の強い記載は少なめ",alcohol?"飲酒量の記載":"飲酒記載なし",input.sweat?"活動による軽減要素":""].filter(Boolean),
-  uric:[sig.purine?"プリン体が多い可能性のある食材":"高プリン体食材の強い記載は少なめ",alcohol?"飲酒量の記載":"飲酒記載なし",input.water?"十分な水分記録":"水分記録なし",input.sweat&&!input.water?"発汗＋水分不足の可能性":""].filter(Boolean)
- };
- return {scores:{blood,liver,uric},levels:{blood:level(blood),liver:level(liver),uric:level(uric)},reasons};
-}
-function impactHtml(p){return [["blood","血糖への影響"],["liver","肝臓への影響"],["uric","尿酸への影響"]].map(([k,title])=>`<article class="impact-card ${p.levels[k].key}"><h3>${title}</h3><strong>${p.levels[k].mark} ${p.levels[k].label}</strong><div class="impact-meter"><span style="width:${Math.round(p.scores[k]*10)}%"></span></div><p>${p.reasons[k].map(esc).join("／")}</p></article>`).join("");}
-function previewImpact(){const input=collectRecordInput();const p=predictImpact(input);$("currentImpact").innerHTML=impactHtml(p);return p;}
-$("previewRecord").onclick=previewImpact;
-$("mealSelect").onchange=e=>{if(e.target.value)$("mealName").value=e.target.value;};
-$("fullness").oninput=e=>$("fullnessValue").textContent=`${e.target.value} / 10`;
-$("saveRecord").onclick=()=>{const input=collectRecordInput();if(!input.meal)return alert("食べた献立名を入力してください。");if(!input.foods)return alert("食材名と量を入力してください。");input.prediction=predictImpact(input);state.records.unshift(input);state.records=state.records.slice(0,200);save();renderRecords();renderPrediction();$("currentImpact").innerHTML=impactHtml(input.prediction);};
-$("clearRecords").onclick=()=>{if(confirm("食事・予測履歴を削除しますか？")){state.records=[];save();renderRecords();renderPrediction();}};
-function calcPrediction(){
- const base={h:Number($("baseHb").value||6),a:Number($("baseAlt").value||45),u:Number($("baseUa").value||6.9)},recent=state.records.slice(0,30);
- if(!recent.length)return {base,none:true};
- const scores=recent.map(r=>r.prediction?.scores||{blood:Math.max(0,6-(r.b||3)),liver:Math.max(0,6-(r.l||3)),uric:Math.max(0,6-(r.u||3))});
- const avg=k=>scores.reduce((n,x)=>n+Number(x[k]||0),0)/scores.length;
- const bh=avg("blood"),la=avg("liver"),uu=avg("uric");
- const hd=Math.max(-.2,Math.min(.35,(bh-3)*.045)),ad=Math.max(-6,Math.min(12,(la-3)*1.15)),ud=Math.max(-.4,Math.min(.8,(uu-3)*.075));
- const trend=v=>v>.08?"上昇傾向":v<-.05?"改善傾向":"横ばい傾向";
- return {base,h:[base.h+hd-.1,base.h+hd+.1],a:[Math.max(1,base.a+ad-3),base.a+ad+3],u:[Math.max(1,base.u+ud-.2),base.u+ud+.2],trends:{h:trend(hd),a:trend(ad/20),u:trend(ud)},count:recent.length};
-}
-function renderPrediction(){const p=calcPrediction();$("homeHb").textContent=p.base.h.toFixed(1);$("homeAlt").textContent=Math.round(p.base.a);$("homeUa").textContent=p.base.u.toFixed(1);if(p.none){$("prediction").innerHTML="<article class='prediction'>食事記録後に表示します。</article>";$("homeTrend").textContent="まだ記録がありません。";return}$("prediction").innerHTML=`<article class="prediction"><span>HbA1c参考</span><strong>${p.h[0].toFixed(1)}〜${p.h[1].toFixed(1)}</strong><em>${p.trends.h}</em></article><article class="prediction"><span>ALT参考</span><strong>${Math.round(p.a[0])}〜${Math.round(p.a[1])}</strong><em>${p.trends.a}</em></article><article class="prediction"><span>尿酸参考</span><strong>${p.u[0].toFixed(1)}〜${p.u[1].toFixed(1)}</strong><em>${p.trends.u}</em></article>`;$("homeTrend").textContent=`直近${p.count}件：HbA1c ${p.trends.h}、ALT ${p.trends.a}、尿酸 ${p.trends.u}`;}
-["baseHb","baseAlt","baseUa"].forEach(id=>$(id).oninput=renderPrediction);
-function renderRecords(){
- if(!state.records.length){$("recordHistory").textContent="まだ記録がありません。";return}
- const labels={small:"少なめ",normal:"普通",large:"多め",veryLarge:"かなり多い",breakfast:"朝食",lunch:"昼食",dinner:"夕食",snack:"間食・夜食"};
- $("recordHistory").innerHTML=state.records.map((r,i)=>{const p=r.prediction||predictImpact({...r,foods:r.foods||"",seasonings:r.seasonings||"",drinks:r.drinks||"",alcoholAmount:r.alcoholAmount||(r.alcohol?"飲酒あり":""),mealAmount:r.mealAmount||"normal",mealType:r.mealType||"dinner",fullness:r.fullness||7,lateMeal:r.lateMeal||false});return `<details class="history-card" ${i===0?"open":""}><summary><span><strong>${esc(r.meal)}</strong><small>${new Date(r.date).toLocaleString("ja-JP")}／${labels[r.mealType]||"食事"}</small></span><span class="history-badges"><b class="${p.levels.blood.key}">血糖${p.levels.blood.mark}</b><b class="${p.levels.liver.key}">肝臓${p.levels.liver.mark}</b><b class="${p.levels.uric.key}">尿酸${p.levels.uric.mark}</b></span></summary><div class="history-detail"><p><strong>食材・量：</strong>${esc(r.foods||"未入力")}</p><p><strong>調味料：</strong>${esc(r.seasonings||"なし")}</p><p><strong>飲み物：</strong>${esc(r.drinks||"なし")}　<strong>飲酒量：</strong>${esc(r.alcoholAmount||"なし")}</p><p><strong>食事量：</strong>${labels[r.mealAmount]||"普通"}　<strong>満腹度：</strong>${r.fullness||"-"}/10</p>${r.memo?`<p><strong>メモ：</strong>${esc(r.memo)}</p>`:""}<div class="impact-grid compact">${impactHtml(p)}</div></div></details>`}).join("");
-}
 
-let barcodeControls=null,scanTimer=null,currentPhoto=null;
-function setState(id,text,kind){const e=$(id);e.textContent=text;e.className=`state ${kind}`;}
-async function startBarcode(){stopBarcode(false);setState("barcodeState","読込中","working");$("barcodeMessage").textContent="バーコードを枠内へ合わせてください。";try{if(!window.ZXingBrowser)throw new Error();const reader=new ZXingBrowser.BrowserMultiFormatReader(),devices=await ZXingBrowser.BrowserCodeReader.listVideoInputDevices(),rear=devices.find(d=>/back|rear|environment/i.test(d.label))||devices.at(-1);barcodeControls=await reader.decodeFromVideoDevice(rear?.deviceId,$("barcodeVideo"),result=>{if(result){$("barcodeResult").innerHTML=`<strong>読込完了</strong><br>${result.getText()}`;$("barcodeMessage").textContent="バーコードを読み取りました。";setState("barcodeState","読込完了","success");stopBarcode(false);}});scanTimer=setTimeout(()=>{if($("barcodeState").textContent==="読込中"){$("barcodeMessage").textContent="15秒以内に読み取れませんでした。明るさ・反射・距離を確認してください。";setState("barcodeState","読込失敗","failure");stopBarcode(false);}},15000);}catch{$("barcodeMessage").textContent="カメラまたはライブラリを利用できません。";setState("barcodeState","読込失敗","failure");}}
-function stopBarcode(reset=true){if(scanTimer)clearTimeout(scanTimer);try{barcodeControls?.stop()}catch{}const s=$("barcodeVideo").srcObject;if(s)s.getTracks().forEach(t=>t.stop());$("barcodeVideo").srcObject=null;if(reset)setState("barcodeState","停止","idle");}
-$("startScan").onclick=startBarcode;$("stopScan").onclick=()=>stopBarcode(true);
-$("photoInput").onchange=e=>{currentPhoto=e.target.files?.[0];if(!currentPhoto)return;$("preview").src=URL.createObjectURL(currentPhoto);$("preview").hidden=false;$("ocrMessage").textContent="画像を受け取りました。";setState("ocrState","画像確認","working");};
-function preprocess(file){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>{const max=1800,s=Math.min(1,max/Math.max(img.width,img.height)),c=$("workCanvas");c.width=img.width*s;c.height=img.height*s;c.getContext("2d").drawImage(img,0,0,c.width,c.height);c.toBlob(resolve,"image/jpeg",.94)};img.onerror=reject;img.src=URL.createObjectURL(file);});}
-$("runOcr").onclick=async()=>{if(!currentPhoto)return alert("画像を選択してください。");if(!window.Tesseract){setState("ocrState","読込失敗","failure");return}setState("ocrState","OCR処理中","working");$("ocrProgressWrap").hidden=false;try{const img=await preprocess(currentPhoto),r=await Tesseract.recognize(img,"jpn+eng",{logger:m=>{if(m.status==="recognizing text"){$("ocrProgressBar").style.width=Math.round(m.progress*100)+"%";$("ocrMessage").textContent=`文字認識中 ${Math.round(m.progress*100)}%`;}}});$("ocrText").value=(r.data.text||"").trim();setState("ocrState",$("ocrText").value.length>10?"読込完了":"読込失敗",$("ocrText").value.length>10?"success":"failure");}catch{setState("ocrState","読込失敗","failure");}};
-$("judgeOcr").onclick=()=>{const t=$("ocrText").value.replace(/\s/g,""),risks=["ぶどう糖果糖液糖","果糖ぶどう糖液糖","高果糖液糖","異性化糖","砂糖","水あめ","酒精","アルコール","植物油脂","ショートニング","酵母エキス"],f=risks.filter(x=>t.includes(x));$("ocrResult").innerHTML=f.length?`<strong>注意原材料を検出</strong><br>${f.join("、")}<br><small>使用量と栄養成分も確認してください。</small>`:"注意対象は検出されませんでした。誤認識がないか確認してください。";};
+function renderMealTextAnalysis(){const text=[$("mealNameInput").value,$("mealFoodsInput").value,$("mealExtrasInput").value,$("mealMemoInput").value].join(" ").trim();if(!text){$("mealTextAnalysis").textContent="献立名・食材・調味料などを入力してください。";return null;}const r=analyzeFreeText(text);if($("mealAmountInput").value==="large"){r.b=["× 注意","bad"];r.l=["△ やや注意","warn"];}if($("fullnessInput").value==="full")r.b=["× 注意","bad"];$("mealTextAnalysis").innerHTML=`<p><span class="badge ${r.b[1]}">血糖 ${r.b[0]}</span><span class="badge ${r.l[1]}">肝臓 ${r.l[0]}</span><span class="badge ${r.u[1]}">尿酸 ${r.u[0]}</span></p><p>HbA1c ${r.hb}／ALT ${r.alt}／尿酸 ${r.ua}</p><p class="fine">入力内容からの簡易予測です。実測値を保証しません。</p>`;return r;}
+$("analyzeMealText").onclick=renderMealTextAnalysis;
+
+function updateMealSelect(selected=""){const names=[...new Set([...state.generated.map(x=>x.name),...recipes.map(x=>x.name)])];$("mealSelect").innerHTML='<option value="">選択してください</option>'+names.map(n=>`<option ${n===selected?"selected":""}>${n}</option>`).join("");}
+$("saveRecord").onclick=()=>{const selected=$("mealSelect").value,name=$("mealNameInput").value.trim()||selected,foods=$("mealFoodsInput").value.trim(),extras=$("mealExtrasInput").value.trim(),memo=$("mealMemoInput").value.trim();if(!name&&!foods)return alert("献立名または食材を入力してください。");const a=renderMealTextAnalysis()||analyzeFreeText(name||foods),score=v=>v[1]==="good"?5:v[1]==="warn"?3:1;state.records.unshift({date:new Date().toISOString(),meal:name||"食事記録",foods,extras,memo,amount:$("mealAmountInput").value,mealTime:$("mealTimeInput").value,fullness:$("fullnessInput").value,b:score(a.b),l:score(a.l),u:score(a.u),trend:{hb:a.hb,alt:a.alt,ua:a.ua},water:$("water").checked,walk:$("walk").checked,sweat:$("sweat").checked,alcohol:$("alcohol").checked});save();renderRecords();renderPrediction();};
+$("clearRecords").onclick=()=>{if(confirm("履歴を削除しますか？")){state.records=[];save();renderRecords();renderPrediction();}};
+function calcPrediction(){const base={h:Number($("baseHb").value||6),a:Number($("baseAlt").value||45),u:Number($("baseUa").value||6.9)},recent=state.records.slice(0,14);if(!recent.length)return {base,none:true};let sb=0,sl=0,su=0;for(const r of recent){sb+=(r.b-3)*.06+(r.walk?.04:0)+(r.alcohol?-.02:0);sl+=(r.l-3)*.7+(r.walk?.3:0)+(r.alcohol?-1.4:0);su+=(r.u-3)*.04+(r.water?.05:0)+(r.sweat&&!r.water?-.04:0)+(r.alcohol?-.08:0);}const n=recent.length,hd=Math.max(-.3,Math.min(.3,-sb/n)),ad=Math.max(-8,Math.min(8,-sl/n)),ud=Math.max(-.6,Math.min(.6,-su/n));return {base,h:[base.h+hd-.1,base.h+hd+.1],a:[Math.max(1,base.a+ad-3),base.a+ad+3],u:[Math.max(1,base.u+ud-.2),base.u+ud+.2],count:n};}
+function renderPrediction(){const p=calcPrediction();$("homeHb").textContent=p.base.h.toFixed(1);$("homeAlt").textContent=Math.round(p.base.a);$("homeUa").textContent=p.base.u.toFixed(1);if(p.none){$("prediction").innerHTML="<article class='prediction'>記録後に表示します。</article>";$("homeTrend").textContent="まだ記録がありません。";return}$("prediction").innerHTML=`<article class="prediction"><span>HbA1c参考</span><strong>${p.h[0].toFixed(1)}〜${p.h[1].toFixed(1)}</strong></article><article class="prediction"><span>ALT参考</span><strong>${Math.round(p.a[0])}〜${Math.round(p.a[1])}</strong></article><article class="prediction"><span>尿酸参考</span><strong>${p.u[0].toFixed(1)}〜${p.u[1].toFixed(1)}</strong></article>`;$("homeTrend").textContent=`直近${p.count}件からの参考傾向：HbA1c ${p.h[0].toFixed(1)}〜${p.h[1].toFixed(1)}、ALT ${Math.round(p.a[0])}〜${Math.round(p.a[1])}、尿酸 ${p.u[0].toFixed(1)}〜${p.u[1].toFixed(1)}`;}
+["baseHb","baseAlt","baseUa"].forEach(id=>$(id).oninput=renderPrediction);
+function renderRecords(){$("recordHistory").innerHTML=state.records.length?state.records.map(r=>`<div class="history"><strong>${new Date(r.date).toLocaleString("ja-JP")}</strong><br>${r.meal}${r.foods?`<br><small>食材：${r.foods}</small>`:""}${r.extras?`<br><small>調味料・飲み物：${r.extras}</small>`:""}${r.trend?`<br><small>予測：HbA1c ${r.trend.hb}／ALT ${r.trend.alt}／尿酸 ${r.trend.ua}</small>`:""}${r.memo?`<br><small>メモ：${r.memo}</small>`:""}<br><small>水分:${r.water?"○":"－"} 歩行:${r.walk?"○":"－"} 発汗:${r.sweat?"○":"－"} 飲酒:${r.alcohol?"○":"－"}</small></div>`).join(""):"まだ記録がありません。";}
+
 
 // ----- 自動更新 -----
 let swRegistration=null;
@@ -306,5 +284,5 @@ async function registerServiceWorker(){
  }
 }
 
-renderFoods();renderSeasonings();renderFridge();renderSelected();updateMealSelect();renderRecords();renderPrediction();renderFoodHistory();
+renderAiHistory();renderFoods();renderSeasonings();renderFridge();renderSelected();updateMealSelect();renderRecords();renderPrediction();renderFoodHistory();
 registerServiceWorker().finally(()=>setTimeout(()=>checkForUpdate(false),800));
