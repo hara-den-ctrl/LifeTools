@@ -1,4 +1,4 @@
-const VERSION="0.9.1";
+const VERSION="0.9.2";
 const BUILD="20260721-0910";
 const $=id=>document.getElementById(id);
 const LS={foods:"hc07.foods",seasonings:"hc07.seasonings",fridge:"hc07.fridge",records:"hc07.records",autoUpdate:"hc07.autoUpdate",favorites:"hc08.seasoningFavorites",recent:"hc08.seasoningRecent",foodHistory:"hc08.foodSearchHistory",aiHistory:"hc09.aiSearchHistory"};
@@ -227,8 +227,32 @@ $("saveRecord").onclick=()=>{
  save();renderRecords();renderPrediction();resetRecordForm();
 };
 $("clearRecords").onclick=()=>{if(confirm("すべての履歴を削除しますか？この操作は元に戻せません。")){state.records=[];save();renderRecords();renderPrediction();resetRecordForm();}};
-function calcPrediction(){const base={h:Number($("baseHb").value||6),a:Number($("baseAlt").value||45),u:Number($("baseUa").value||6.9)},recent=state.records.slice(0,14);if(!recent.length)return {base,none:true};let sb=0,sl=0,su=0;for(const r of recent){sb+=(r.b-3)*.06+(r.walk?.04:0)+(r.alcohol?-.02:0);sl+=(r.l-3)*.7+(r.walk?.3:0)+(r.alcohol?-1.4:0);su+=(r.u-3)*.04+(r.water?.05:0)+(r.sweat&&!r.water?-.04:0)+(r.alcohol?-.08:0);}const n=recent.length,hd=Math.max(-.3,Math.min(.3,-sb/n)),ad=Math.max(-8,Math.min(8,-sl/n)),ud=Math.max(-.6,Math.min(.6,-su/n));return {base,h:[base.h+hd-.1,base.h+hd+.1],a:[Math.max(1,base.a+ad-3),base.a+ad+3],u:[Math.max(1,base.u+ud-.2),base.u+ud+.2],count:n};}
-function renderPrediction(){const p=calcPrediction();$("homeHb").textContent=p.base.h.toFixed(1);$("homeAlt").textContent=Math.round(p.base.a);$("homeUa").textContent=p.base.u.toFixed(1);if(p.none){$("prediction").innerHTML="<article class='prediction'>記録後に表示します。</article>";$("homeTrend").textContent="まだ記録がありません。";return}$("prediction").innerHTML=`<article class="prediction"><span>HbA1c参考</span><strong>${p.h[0].toFixed(1)}〜${p.h[1].toFixed(1)}</strong></article><article class="prediction"><span>ALT参考</span><strong>${Math.round(p.a[0])}〜${Math.round(p.a[1])}</strong></article><article class="prediction"><span>尿酸参考</span><strong>${p.u[0].toFixed(1)}〜${p.u[1].toFixed(1)}</strong></article>`;$("homeTrend").textContent=`直近${p.count}件からの参考傾向：HbA1c ${p.h[0].toFixed(1)}〜${p.h[1].toFixed(1)}、ALT ${Math.round(p.a[0])}〜${Math.round(p.a[1])}、尿酸 ${p.u[0].toFixed(1)}〜${p.u[1].toFixed(1)}`;}
+const finiteNumber=(value,fallback)=>{const n=Number(value);return Number.isFinite(n)?n:fallback;};
+const finiteScore=(value)=>{const n=Number(value);return Number.isFinite(n)?Math.max(1,Math.min(5,n)):3;};
+function metricLevel(type,value){
+ if(!Number.isFinite(value))return {className:"metric-unknown",label:"判定できません"};
+ if(type==="hb")return value<5.7?{className:"metric-good",label:"✓ 参考範囲内"}:value<6.5?{className:"metric-warn",label:"△ 注意域"}:{className:"metric-bad",label:"! 高値域"};
+ if(type==="alt")return value<=30?{className:"metric-good",label:"✓ 参考範囲内"}:value<=50?{className:"metric-warn",label:"△ やや高め"}:{className:"metric-bad",label:"! 高値域"};
+ return value<=7?{className:"metric-good",label:"✓ 参考範囲内"}:value<9?{className:"metric-warn",label:"△ 注意域"}:{className:"metric-bad",label:"! 高値域"};
+}
+function applyMetricAlert(id,type,value,statusId){const card=$(id),status=$(statusId),level=metricLevel(type,value);card.classList.remove("metric-good","metric-warn","metric-bad","metric-unknown");card.classList.add(level.className);status.textContent=level.label;}
+function calcPrediction(){
+ const base={h:finiteNumber($("baseHb").value,6),a:finiteNumber($("baseAlt").value,45),u:finiteNumber($("baseUa").value,6.9)};
+ const recent=state.records.slice(0,14);if(!recent.length)return {base,none:true};
+ let sb=0,sl=0,su=0;
+ for(const r of recent){const b=finiteScore(r.b),l=finiteScore(r.l),u=finiteScore(r.u);sb+=(b-3)*.06+(r.walk?.04:0)+(r.alcohol?-.02:0);sl+=(l-3)*.7+(r.walk?.3:0)+(r.alcohol?-1.4:0);su+=(u-3)*.04+(r.water?.05:0)+(r.sweat&&!r.water?-.04:0)+(r.alcohol?-.08:0);}
+ const n=recent.length,hd=Math.max(-.3,Math.min(.3,-sb/n)),ad=Math.max(-8,Math.min(8,-sl/n)),ud=Math.max(-.6,Math.min(.6,-su/n));
+ const h=[base.h+hd-.1,base.h+hd+.1],a=[Math.max(1,base.a+ad-3),base.a+ad+3],u=[Math.max(1,base.u+ud-.2),base.u+ud+.2];
+ if(![...h,...a,...u].every(Number.isFinite))return {base,none:true,invalid:true};
+ return {base,h,a,u,count:n};
+}
+function renderPrediction(){
+ const p=calcPrediction();$("homeHb").textContent=p.base.h.toFixed(1);$("homeAlt").textContent=Math.round(p.base.a);$("homeUa").textContent=p.base.u.toFixed(1);
+ applyMetricAlert("metricHb","hb",p.base.h,"homeHbStatus");applyMetricAlert("metricAlt","alt",p.base.a,"homeAltStatus");applyMetricAlert("metricUa","ua",p.base.u,"homeUaStatus");
+ if(p.none){const msg=p.invalid?"数値を確認すると予測を表示できます。":"記録を入れると予測レンジが表示されます。";$("prediction").innerHTML=`<article class="prediction prediction-empty"><strong>データが不足しています</strong><span>${msg}</span></article>`;$("homeTrend").textContent=msg;return;}
+ $("prediction").innerHTML=`<article class="prediction"><span>HbA1c参考</span><strong>${p.h[0].toFixed(1)}〜${p.h[1].toFixed(1)}</strong></article><article class="prediction"><span>ALT参考</span><strong>${Math.round(p.a[0])}〜${Math.round(p.a[1])}</strong></article><article class="prediction"><span>尿酸参考</span><strong>${p.u[0].toFixed(1)}〜${p.u[1].toFixed(1)}</strong></article>`;
+ $("homeTrend").textContent=`直近${p.count}件からの参考傾向：HbA1c ${p.h[0].toFixed(1)}〜${p.h[1].toFixed(1)}、ALT ${Math.round(p.a[0])}〜${Math.round(p.a[1])}、尿酸 ${p.u[0].toFixed(1)}〜${p.u[1].toFixed(1)}`;
+}
 ["baseHb","baseAlt","baseUa"].forEach(id=>$(id).oninput=renderPrediction);
 const escapeHtml=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function renderRecords(){

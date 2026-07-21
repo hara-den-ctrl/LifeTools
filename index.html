@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#147a52">
-  <meta name="description" content="健康コンシェルジュ Ver0.9.1">
-  <title>健康コンシェルジュ Ver0.9.1</title>
+  <meta name="description" content="健康コンシェルジュ Ver0.9.2">
+  <title>健康コンシェルジュ Ver0.9.2</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=0.9.1">
-  <script src="./seasoning-db.js?v=0.9.1" defer></script>
-  <script src="./app.js?v=0.9.1" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=0.9.2">
+  <script src="./seasoning-db.js?v=0.9.2" defer></script>
+  <script src="./app.js?v=0.9.2" defer></script>
 </head>
 <body>
 <header class="topbar">
@@ -18,7 +18,7 @@
     <small>LifeTools / HealthTools</small>
     <h1>🍃 健康コンシェルジュ</h1>
   </div>
-  <button class="version-badge jump" data-target="settings" aria-label="アプリ情報を開く">Ver0.9.1</button>
+  <button class="version-badge jump" data-target="settings" aria-label="アプリ情報を開く">Ver0.9.2</button>
 </header>
 
 <div id="updateBanner" class="update-banner" hidden>
@@ -68,20 +68,17 @@
     </div>
 
     <div class="metrics">
-      <article><span>HbA1c</span><strong id="homeHb">6.0</strong><small>基準値</small></article>
-      <article><span>ALT</span><strong id="homeAlt">45</strong><small>U/L</small></article>
-      <article><span>尿酸</span><strong id="homeUa">6.9</strong><small>mg/dL</small></article>
+      <article id="metricHb" class="metric-card"><span>HbA1c</span><strong id="homeHb">6.0</strong><small id="homeHbStatus">判定待ち</small></article>
+      <article id="metricAlt" class="metric-card"><span>ALT</span><strong id="homeAlt">45</strong><small id="homeAltStatus">判定待ち</small></article>
+      <article id="metricUa" class="metric-card"><span>尿酸</span><strong id="homeUa">6.9</strong><small id="homeUaStatus">判定待ち</small></article>
     </div>
 
     <div class="panel">
-      <h2>今日の操作</h2>
-      <div class="quick-grid">
-        <button class="quick jump focus-ai-search" data-target="aiSearch">✨ AI検索・判定</button>
-        <button class="quick jump" data-target="chef">🤖 献立を作る</button>
-        <button class="quick jump" data-target="seasonings">🧂 調味料を確認</button>
-        <button class="quick jump" data-target="fridge">🧊 冷蔵庫を確認</button>
-        <button class="quick jump" data-target="record">✅ 食事を記録</button>
-        <button class="quick jump" data-target="record">✍️ 食べた内容を入力</button>
+      <h2>今日のアクション</h2>
+      <p class="fine action-lead">ホームでは、今日の記録に必要な操作だけを表示しています。</p>
+      <div class="quick-grid home-actions">
+        <button class="quick primary-action jump" data-target="record">✍️ 食べたものを記録する</button>
+        <button class="quick jump focus-ai-search" data-target="aiSearch">✨ 食べる前にAI判定する</button>
       </div>
     </div>
 
@@ -243,23 +240,23 @@
         <div><strong>今すぐ最新版を確認</strong><p>GitHub上のversion.jsonをキャッシュせず確認します。</p></div>
         <button id="manualUpdateCheck" class="secondary">更新確認</button>
       </div>
-      <div id="updateStatus" class="box">現在 Ver0.9.1</div>
+      <div id="updateStatus" class="box">現在 Ver0.9.2</div>
     </div>
 
     <div class="panel">
       <h2>アプリ情報</h2>
       <dl class="app-info">
         <div><dt>アプリ名</dt><dd>健康コンシェルジュ</dd></div>
-        <div><dt>Version</dt><dd>0.9.1</dd></div>
+        <div><dt>Version</dt><dd>0.9.2</dd></div>
         <div><dt>Build</dt><dd>20260721-0910</dd></div>
-        <div><dt>キャッシュ</dt><dd>healthtools-v0.9.1</dd></div>
+        <div><dt>キャッシュ</dt><dd>healthtools-v0.9.2</dd></div>
       </dl>
     </div>
 
     <div class="panel">
       <h2>更新履歴</h2>
       <article class="release">
-        <strong>Ver0.9.1</strong>
+        <strong>Ver0.9.2</strong>
         <p>履歴の編集・AI再判定、個別削除（確認ダイアログ付き）を追加。既存機能を維持。</p>
       </article>
       <article class="release">
@@ -275,7 +272,7 @@
 </main>
 
 <footer>
-  <strong>健康コンシェルジュ Ver0.9.1</strong><br>
+  <strong>健康コンシェルジュ Ver0.9.2</strong><br>
   Build 20260721-0910
 </footer>
 </body>

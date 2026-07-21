@@ -1,7 +1,7 @@
-健康コンシェルジュ Ver0.9.1 アップロード確認
+健康コンシェルジュ Ver0.9.2 アップロード確認
 
 1. ZIPを展開し、すべてのファイルをGitHub Pagesの公開フォルダへ上書きしてください。
-2. index.html / app.js / styles.css の参照は v=0.9.1 です。
-3. service-worker.js の CACHE は healthtools-v0.9.1 です。
-4. version.json の version は 0.9.1 です。
+2. index.html / app.js / styles.css の参照は v=0.9.2 です。
+3. service-worker.js の CACHE は healthtools-v0.9.2 です。
+4. version.json の version は 0.9.2 です。
 5. 更新後に旧画面が残る場合は、アプリの更新確認またはブラウザ再読み込みを行ってください。
