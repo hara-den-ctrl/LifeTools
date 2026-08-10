@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#147a52">
-  <meta name="description" content="健康コンシェルジュ Ver0.9.2">
-  <title>健康コンシェルジュ Ver0.9.2</title>
+  <meta name="description" content="健康コンシェルジュ Ver1.0.0">
+  <title>健康コンシェルジュ Ver1.0.0</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=0.9.2">
-  <script src="./seasoning-db.js?v=0.9.2" defer></script>
-  <script src="./app.js?v=0.9.2" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=1.0.0">
+  <script src="./seasoning-db.js?v=1.0.0" defer></script>
+  <script src="./app.js?v=1.0.0" defer></script>
 </head>
 <body>
 <header class="topbar">
@@ -18,7 +18,7 @@
     <small>LifeTools / HealthTools</small>
     <h1>🍃 健康コンシェルジュ</h1>
   </div>
-  <button class="version-badge jump" data-target="settings" aria-label="アプリ情報を開く">Ver0.9.2</button>
+  <button class="version-badge jump" data-target="settings" aria-label="アプリ情報を開く">Ver1.0.0</button>
 </header>
 
 <div id="updateBanner" class="update-banner" hidden>
@@ -54,6 +54,7 @@
     <button class="tab" data-view="fridge">冷蔵庫</button>
     <button class="tab" data-view="record">記録</button>
     <button class="tab" data-view="aiSearch">AI検索</button>
+    <button class="tab" data-view="aiConsult">AI相談</button>
     <button class="tab" data-view="settings">設定</button>
   </nav>
 
@@ -98,6 +99,19 @@
       </div>
       <div id="aiSearchHistory" class="chip-row"></div>
       <div id="aiSearchResult" class="box ai-search-result">入力内容から、血糖・肝臓・尿酸への影響と食べ方の注意を表示します。</div>
+    </div>
+  </section>
+
+  <section id="aiConsult" class="view">
+    <div class="panel ai-search-panel">
+      <div class="head-row"><div><small>血糖・肝臓・尿酸・飲酒・食事量に特化</small><h2>健康AI相談</h2></div></div>
+      <p>例：「創味つゆでうどんを食べたい」「刺身と日本酒1合なら？」「昨日飲みすぎたので今日の食事は？」</p>
+      <div class="search-action-row">
+        <textarea id="aiConsultInput" rows="3" placeholder="食事や飲酒について自由に相談してください"></textarea>
+        <button id="aiConsultButton" class="primary">相談する</button>
+      </div>
+      <div id="aiConsultHistory" class="chip-row"></div>
+      <div id="aiConsultResult" class="box ai-search-result">登録値と入力内容を使い、血糖・肝臓・尿酸の観点から理由と具体策を表示します。</div>
     </div>
   </section>
 
@@ -167,8 +181,12 @@
       <h2>使用時の注意</h2>
       <div id="seasoningAdvice" class="cards">調味料を選ぶと注意を表示します。</div>
     </div>
+    <div class="panel">
+      <div class="head-row"><div><small>AI検索・AI相談から保存</small><h2>マイ商品DB</h2></div><button id="clearCustomProducts" class="secondary small">全削除</button></div>
+      <p class="fine">検索・相談で得た原材料や栄養情報を確認・修正して保存できます。登録情報は次回の判定で優先使用します。</p>
+      <div id="customProductList" class="cards">まだ登録がありません。</div>
+    </div>
   </section>
-
   <section id="fridge" class="view">
     <div class="panel">
       <h2>冷蔵庫へ追加</h2>
@@ -240,28 +258,28 @@
         <div><strong>今すぐ最新版を確認</strong><p>GitHub上のversion.jsonをキャッシュせず確認します。</p></div>
         <button id="manualUpdateCheck" class="secondary">更新確認</button>
       </div>
-      <div id="updateStatus" class="box">現在 Ver0.9.2</div>
+      <div id="updateStatus" class="box">現在 Ver1.0.0</div>
     </div>
 
     <div class="panel">
       <h2>アプリ情報</h2>
       <dl class="app-info">
         <div><dt>アプリ名</dt><dd>健康コンシェルジュ</dd></div>
-        <div><dt>Version</dt><dd>0.9.2</dd></div>
+        <div><dt>Version</dt><dd>1.0.0</dd></div>
         <div><dt>Build</dt><dd>20260721-0910</dd></div>
-        <div><dt>キャッシュ</dt><dd>healthtools-v0.9.2</dd></div>
+        <div><dt>キャッシュ</dt><dd>healthtools-v1.0.0</dd></div>
       </dl>
     </div>
 
     <div class="panel">
       <h2>更新履歴</h2>
       <article class="release">
-        <strong>Ver0.9.2</strong>
+        <strong>Ver1.0.0</strong>
         <p>履歴の編集・AI再判定、個別削除（確認ダイアログ付き）を追加。既存機能を維持。</p>
       </article>
       <article class="release">
         <strong>Ver0.9</strong>
-        <p>調味料カテゴリー表示に加え、自由入力の食材検索、AI参考回答、検索食材からの献立連携を追加。</p>
+        <p>AI検索の詳細回答、健康AI相談、検索・相談結果からのマイ商品DB登録、登録情報優先判定を追加。</p>
       </article>
       <article class="release">
         <strong>Ver0.6</strong>
@@ -272,7 +290,7 @@
 </main>
 
 <footer>
-  <strong>健康コンシェルジュ Ver0.9.2</strong><br>
+  <strong>健康コンシェルジュ Ver1.0.0</strong><br>
   Build 20260721-0910
 </footer>
 </body>
