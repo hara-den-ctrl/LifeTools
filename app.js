@@ -1,4 +1,4 @@
-const VERSION="1.0.0";
+const VERSION="1.0.1";
 const BUILD="20260810-1000";
 const $=id=>document.getElementById(id);
 const LS={foods:"hc07.foods",seasonings:"hc07.seasonings",fridge:"hc07.fridge",records:"hc07.records",autoUpdate:"hc07.autoUpdate",favorites:"hc08.seasoningFavorites",recent:"hc08.seasoningRecent",foodHistory:"hc08.foodSearchHistory",aiHistory:"hc09.aiSearchHistory"};
@@ -39,13 +39,13 @@ const foodAliases={"じゃがいも":"ジャガイモ","馬鈴薯":"ジャガイ
 
 const seasoningData=window.SEASONING_DB||[];
 const recipes=[
-{name:"鶏むね肉とキャベツの蒸し焼き",need:["鶏むね肉","キャベツ"],opt:["玉ねぎ","きのこ"],time:20,b:5,l:5,u:5,sea:["濃口しょうゆ"],steps:"薄切り → 蒸し焼き → しょうゆ少量"},
-{name:"鮭ときのこのホイル焼き",need:["鮭","きのこ"],opt:["玉ねぎ","ピーマン"],time:25,b:5,l:5,u:5,sea:["濃口しょうゆ"],steps:"包む → 蒸す → 薄味"},
-{name:"タラと豆腐の鍋",need:["タラ","豆腐"],opt:["キャベツ","大根","きのこ"],time:25,b:5,l:5,u:5,sea:["ポン酢"],steps:"だし → 具材を煮る → ポン酢少量"},
-{name:"鶏むね肉の親子煮",need:["鶏むね肉","卵","玉ねぎ"],opt:[],time:20,b:4,l:5,u:5,sea:["キッコーマン 本つゆ 濃縮4倍"],steps:"鶏肉と玉ねぎ → つゆを薄める → 卵"},
+{name:"鶏むね肉とキャベツの蒸し焼き",need:["鶏むね肉","キャベツ"],opt:["玉ねぎ","きのこ"],time:20,b:5,l:5,u:4,sea:["濃口しょうゆ"],steps:"薄切り → 蒸し焼き → しょうゆ少量"},
+{name:"鮭ときのこのホイル焼き",need:["鮭","きのこ"],opt:["玉ねぎ","ピーマン"],time:25,b:5,l:5,u:4,sea:["濃口しょうゆ"],steps:"包む → 蒸す → 薄味"},
+{name:"タラと豆腐の鍋",need:["タラ","豆腐"],opt:["キャベツ","大根","きのこ"],time:25,b:5,l:5,u:4,sea:["ポン酢"],steps:"だし → 具材を煮る → ポン酢少量"},
+{name:"鶏むね肉の親子煮",need:["鶏むね肉","卵","玉ねぎ"],opt:[],time:20,b:4,l:5,u:4,sea:["キッコーマン 本つゆ 濃縮4倍"],steps:"鶏肉と玉ねぎ → つゆを薄める → 卵"},
 {name:"サバと大根のさっぱり煮",need:["サバ","大根"],opt:[],time:30,b:4,l:5,u:3,sea:["濃口しょうゆ","本みりん"],steps:"湯通し → 煮る → 甘味控えめ"},
-{name:"豚ロースと小松菜の炒め物",need:["豚ロース","小松菜"],opt:["もやし","きのこ"],time:15,b:5,l:4,u:5,sea:["濃口しょうゆ"],steps:"油少量 → 肉 → 野菜"},
-{name:"豆腐と卵のスープ",need:["豆腐","卵"],opt:["小松菜","きのこ"],time:15,b:5,l:5,u:5,sea:["濃口しょうゆ"],steps:"だし → 豆腐 → 卵"},
+{name:"豚ロースと小松菜の炒め物",need:["豚ロース","小松菜"],opt:["もやし","きのこ"],time:15,b:5,l:4,u:4,sea:["濃口しょうゆ"],steps:"油少量 → 肉 → 野菜"},
+{name:"豆腐と卵のスープ",need:["豆腐","卵"],opt:["小松菜","きのこ"],time:15,b:5,l:5,u:4,sea:["濃口しょうゆ"],steps:"だし → 豆腐 → 卵"},
 {name:"ブリの照り焼き 甘味控えめ",need:["ブリ"],opt:["大根","小松菜"],time:25,b:3,l:3,u:3,sea:["濃口しょうゆ","本みりん"],steps:"脂を拭く → みりん少量"},
 {name:"エビとブロッコリーの塩炒め",need:["エビ","ブロッコリー"],opt:["玉ねぎ"],time:15,b:5,l:5,u:3,sea:["料理酒"],steps:"下処理 → 少量の油 → 薄味"},
 {name:"納豆・豆腐・野菜の和定食",need:["納豆","豆腐"],opt:["小松菜","大根"],time:10,b:5,l:5,u:4,sea:["濃口しょうゆ"],steps:"冷奴 → 納豆 → 野菜副菜"}
@@ -171,8 +171,15 @@ function generateMeals(){
  state.generated=ranked;
  renderGeneratedMeals(ranked);
 }
+function mealConsiderationLabel(score){return score>=5?["◎ とても配慮","good"]:score>=4?["○ 配慮","good"]:score>=3?["△ 要調整","warn"]:["！注意","bad"];}
+function mealReason(type,r){
+ const fish=/鮭|タラ|サバ|ブリ|エビ/.test(r.name),fried=/炒め|照り焼き/.test(r.name),soup=/鍋|スープ|煮/.test(r.name);
+ if(type==="blood")return r.b>=5?"主食・砂糖が中心ではなく、糖質負荷を抑えやすい構成です。":r.b>=4?"比較的調整しやすいですが、つゆ・みりん・主食量を含めて考えます。":"甘い味付けや主食量を控えめにすると調整しやすくなります。";
+ if(type==="liver")return r.l>=5?(fried?"油を少量にすれば脂質を抑えやすい構成です。":"揚げ物ではなく、総エネルギーと脂質を抑えやすい調理です。"):r.l>=4?"脂質・調理油・飲酒を重ねないことを前提に配慮しやすい献立です。":"脂質や甘い味付け、飲酒との重なりに注意が必要です。";
+ return r.u>=5?"尿酸面で大きな注意食材が少ない構成です。":r.u>=4?(fish?"魚介を含むため満点扱いにはせず、量・飲酒・水分も合わせて評価します。":"食べ過ぎ・飲酒・水分不足を避ければ比較的調整しやすい構成です。"):(fish?"魚介の種類と量を考慮し、飲酒を重ねない方が安全側です。":"プリン体だけでなく飲酒・過食・脱水にも注意します。");
+}
 function renderGeneratedMeals(ranked){
- $("mealResults").innerHTML=ranked.length?ranked.map((r,i)=>{const ws=r.sea.map(seaObj).filter(Boolean).filter(x=>x.blood!=="good"||x.liver!=="good"||x.uric!=="good");return `<article class="card"><h3>${i+1}. ${r.name}</h3><p><span class="badge ${r.b>=4?"good":"warn"}">血糖 ${r.b}/5</span><span class="badge ${r.l>=4?"good":"warn"}">肝臓 ${r.l}/5</span><span class="badge ${r.u>=4?"good":"warn"}">尿酸 ${r.u}/5</span></p><p><strong>${r.time}分</strong>　${r.steps}</p><p><strong>調味料：</strong>${r.sea.join("、")}</p>${ws.length?`<p><strong>調味料注意：</strong>${ws.map(x=>`${x.name}：${x.advice}`).join(" / ")}</p>`:""}${r.missing.length?`<p><strong>不足：</strong>${r.missing.join("、")}</p>`:""}<button class="secondary pick-meal" data-i="${i}">記録候補にする</button></article>`}).join(""):"<article class='card'>食材を2つ以上選んでください。</article>";
+ $("mealResults").innerHTML=ranked.length?ranked.map((r,i)=>{const ws=r.sea.map(seaObj).filter(Boolean).filter(x=>x.blood!=="good"||x.liver!=="good"||x.uric!=="good"),bl=mealConsiderationLabel(r.b),ll=mealConsiderationLabel(r.l),ul=mealConsiderationLabel(r.u);return `<article class="card"><h3>${i+1}. ${r.name}</h3><p class="fine"><strong>健康配慮度</strong>（5段階・高いほど配慮しやすい献立）</p><p><span class="badge ${bl[1]}">血糖への配慮 ${bl[0]} ${r.b}/5</span><span class="badge ${ll[1]}">肝臓への配慮 ${ll[0]} ${r.l}/5</span><span class="badge ${ul[1]}">尿酸への配慮 ${ul[0]} ${r.u}/5</span></p><details class="meal-score-detail"><summary>評価理由を見る</summary><p><strong>血糖：</strong>${mealReason("blood",r)}</p><p><strong>肝臓：</strong>${mealReason("liver",r)}</p><p><strong>尿酸：</strong>${mealReason("uric",r)}</p><p class="fine">※この点数は検査値や病状の重症度ではなく、献立を選ぶための参考配慮度です。食事量・調味料・飲酒で評価は変わります。</p></details><p><strong>${r.time}分</strong>　${r.steps}</p><p><strong>調味料：</strong>${r.sea.join("、")}</p>${ws.length?`<p><strong>調味料注意：</strong>${ws.map(x=>`${x.name}：${x.advice}`).join(" / ")}</p>`:""}${r.missing.length?`<p><strong>不足：</strong>${r.missing.join("、")}</p>`:""}<button class="secondary pick-meal" data-i="${i}">記録候補にする</button></article>`}).join(""):"<article class='card'>食材を2つ以上選んでください。</article>";
  document.querySelectorAll(".pick-meal").forEach(b=>b.onclick=()=>{updateMealSelect(ranked[Number(b.dataset.i)].name);switchView("record");});
  updateMealSelect();
 }
@@ -348,7 +355,7 @@ async function registerServiceWorker(){
 renderAiHistory();renderFoods();renderSeasonings();renderFridge();renderSelected();updateMealSelect();renderRecords();renderPrediction();renderFoodHistory();
 registerServiceWorker().finally(()=>setTimeout(()=>checkForUpdate(false),800));
 
-/* Ver1.0.0 AI詳細回答・健康AI相談・マイ商品DB */
+/* Ver1.0.1 AI献立評価表示・採点根拠改善 */
 const LS10={products:"hc10.customProducts",consultHistory:"hc10.consultHistory"};
 state.customProducts=JSON.parse(localStorage.getItem(LS10.products)||"[]");
 state.consultHistory=JSON.parse(localStorage.getItem(LS10.consultHistory)||"[]");
