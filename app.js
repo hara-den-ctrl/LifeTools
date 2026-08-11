@@ -1,5 +1,4 @@
-const VERSION="1.0.1";
-const BUILD="20260810-1000";
+const VERSION="1.1";const BUILD="20260811-1100";
 const $=id=>document.getElementById(id);
 const LS={foods:"hc07.foods",seasonings:"hc07.seasonings",fridge:"hc07.fridge",records:"hc07.records",autoUpdate:"hc07.autoUpdate",favorites:"hc08.seasoningFavorites",recent:"hc08.seasoningRecent",foodHistory:"hc08.foodSearchHistory",aiHistory:"hc09.aiSearchHistory"};
 const state={
@@ -89,9 +88,7 @@ function analyzeFreeText(raw){
  if(/日本酒|ビール|焼酎|ワイン|アルコール|飲酒/.test(text)){ls+=2;us++;bs+=.5;}
  const level=s=>s>=2?["× 注意","bad"]:s>=1?["△ やや注意","warn"]:["◎ 良好","good"];
  const b=level(bs),l=level(ls),u=level(us);
- const hb=bs>=2?"+0.1〜+0.2":bs>=1?"±0〜+0.1":"-0.1〜±0";
- const alt=ls>=2?"+3〜+8 U/L":ls>=1?"±0〜+3 U/L":"-3〜±0 U/L";
- const ua=us>=2?"+0.2〜+0.5 mg/dL":us>=1?"±0〜+0.2 mg/dL":"-0.2〜±0 mg/dL";
+ const hb=bs>=2?"上がりやすい":bs>=1?"やや影響しやすい":"影響は比較的小さい";const alt=ls>=2?"負担が重なりやすい":ls>=1?"やや注意":"影響は比較的小さい";const ua=us>=2?"上がる要因が多い":us>=1?"やや注意":"影響は比較的小さい";
  return {...found,input:text,b,l,u,hb,alt,ua};
 }
 function renderAiHistory(){const e=$("aiSearchHistory");if(!e)return;e.innerHTML=state.aiHistory.length?`<span class="history-label">最近：</span>${state.aiHistory.map(x=>`<button class="food-chip" data-ai-history="${x.replace(/"/g,"&quot;")}">${x}</button>`).join("")}`:"";document.querySelectorAll("[data-ai-history]").forEach(b=>b.onclick=()=>{$("aiSearchInput").value=b.dataset.aiHistory;runAiSearchV10();});}
@@ -260,7 +257,7 @@ function renderPrediction(){
  $("prediction").innerHTML=`<article class="prediction"><span>HbA1c参考</span><strong>${p.h[0].toFixed(1)}〜${p.h[1].toFixed(1)}</strong></article><article class="prediction"><span>ALT参考</span><strong>${Math.round(p.a[0])}〜${Math.round(p.a[1])}</strong></article><article class="prediction"><span>尿酸参考</span><strong>${p.u[0].toFixed(1)}〜${p.u[1].toFixed(1)}</strong></article>`;
  $("homeTrend").textContent=`直近${p.count}件からの参考傾向：HbA1c ${p.h[0].toFixed(1)}〜${p.h[1].toFixed(1)}、ALT ${Math.round(p.a[0])}〜${Math.round(p.a[1])}、尿酸 ${p.u[0].toFixed(1)}〜${p.u[1].toFixed(1)}`;
 }
-["baseHb","baseAlt","baseUa"].forEach(id=>$(id).oninput=renderPrediction);
+["baseHb","baseAlt","baseUa"].forEach(id=>$(id).oninput=()=>{localStorage.setItem(`hc11.${id}`,$(id).value);renderPrediction()});
 const escapeHtml=value=>String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function renderRecords(){
  $("recordHistory").innerHTML=state.records.length?state.records.map((r,i)=>`<div class="history"><div class="history-head"><strong>${new Date(r.date).toLocaleString("ja-JP")}</strong><div class="history-actions"><button type="button" class="secondary small edit-record" data-index="${i}">編集</button><button type="button" class="danger small delete-record" data-index="${i}">削除</button></div></div>${escapeHtml(r.meal)}${r.foods?`<br><small>食材：${escapeHtml(r.foods)}</small>`:""}${r.extras?`<br><small>調味料・飲み物：${escapeHtml(r.extras)}</small>`:""}${r.trend?`<br><small>予測：HbA1c ${escapeHtml(r.trend.hb)}／ALT ${escapeHtml(r.trend.alt)}／尿酸 ${escapeHtml(r.trend.ua)}</small>`:""}${r.memo?`<br><small>メモ：${escapeHtml(r.memo)}</small>`:""}<br><small>水分:${r.water?"○":"－"} 歩行:${r.walk?"○":"－"} 発汗:${r.sweat?"○":"－"} 飲酒:${r.alcohol?"○":"－"}${r.updatedAt?`　編集済み:${new Date(r.updatedAt).toLocaleString("ja-JP")}`:""}</small></div>`).join(""):"まだ記録がありません。";

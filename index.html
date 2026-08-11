@@ -4,13 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#147a52">
-  <meta name="description" content="健康コンシェルジュ Ver1.0.1">
-  <title>健康コンシェルジュ Ver1.0.1</title>
+  <meta name="description" content="健康コンシェルジュ Ver1.1"><title>健康コンシェルジュ Ver1.1</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./styles.css?v=1.0.1">
-  <script src="./seasoning-db.js?v=1.0.1" defer></script>
-  <script src="./app.js?v=1.0.1" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=1.1"><script src="./vendor/html5-qrcode.min.js?v=1.1" defer></script><script src="./vendor/tesseract.min.js?v=1.1" defer></script><script src="./seasoning-db.js?v=1.1" defer></script><script src="./app.js?v=1.1" defer></script><script src="./product-scan.js?v=1.1" defer></script>
 </head>
 <body>
 <header class="topbar">
@@ -18,7 +15,7 @@
     <small>LifeTools / HealthTools</small>
     <h1>🍃 健康コンシェルジュ</h1>
   </div>
-  <button class="version-badge jump" data-target="settings" aria-label="アプリ情報を開く">Ver1.0.1</button>
+  <button class="version-badge jump" data-target="settings" aria-label="アプリ情報を開く">Ver1.1</button>
 </header>
 
 <div id="updateBanner" class="update-banner" hidden>
@@ -53,6 +50,7 @@
     <button class="tab" data-view="seasonings">調味料</button>
     <button class="tab" data-view="fridge">冷蔵庫</button>
     <button class="tab" data-view="record">記録</button>
+    <button class="tab" data-view="productScan">商品読取</button>
     <button class="tab" data-view="aiSearch">AI検索</button>
     <button class="tab" data-view="aiConsult">AI相談</button>
     <button class="tab" data-view="settings">設定</button>
@@ -247,6 +245,7 @@
     </div>
   </section>
 
+  <section id="productScan" class="view"><div class="panel scan-hero"><div class="head-row"><div><small>JAN・原材料・栄養表示</small><h2>商品を読み取る</h2></div><span id="scanState" class="state idle">待機中</span></div><p>JAN読取後に商品検索し、未登録ならOCR・手入力へ進めます。</p><div class="scan-actions"><button id="startBarcode" class="primary">📷 バーコード読取</button><button id="stopBarcode" class="secondary" hidden>カメラ停止</button></div><div id="barcodeReader" class="barcode-reader" hidden></div><label>JAN番号を手入力<span class="search-action-row"><input id="janInput" inputmode="numeric" maxlength="14"><button id="janSearch" class="secondary">商品検索</button></span></label></div><div id="productLookupResult"></div><div class="panel"><div class="head-row"><div><small>端末内の日本語文字認識</small><h2>ラベルOCR</h2></div><span id="ocrState" class="state idle">待機中</span></div><div class="ocr-grid"><label class="filebox">原材料を撮影<input id="ingredientsImage" type="file" accept="image/*" capture="environment"></label><label class="filebox">栄養成分を撮影<input id="nutritionImage" type="file" accept="image/*" capture="environment"></label></div><img id="ocrPreview" class="preview" hidden><div class="progress"><div id="ocrProgress"></div></div><p id="ocrMessage" class="fine">画像は端末内で処理します。</p></div><div class="panel product-entry"><h2>商品情報の確認・登録</h2><div class="form-grid"><label>JAN<input id="scanJan" inputmode="numeric"></label><label>商品名<input id="scanName"></label><label>メーカー<input id="scanMaker"></label><label>カテゴリー<input id="scanCategory"></label></div><label>原材料<textarea id="scanIngredients" rows="5"></textarea></label><label>アレルゲン<textarea id="scanAllergens" rows="2"></textarea></label><label>栄養成分<textarea id="scanNutrition" rows="5"></textarea></label><label>1回の目安<input id="scanPortion"></label><label>情報元<input id="scanSource" value="商品ラベル（OCR・手入力）"></label><div class="scan-actions"><button id="analyzeScannedProduct" class="secondary">健康判定</button><button id="saveScannedProduct" class="primary">マイ商品DBへ保存</button></div><div id="scanHealthResult" class="box">入力後に参考判定を表示します。</div><p class="fine">OCR・外部DBは誤る場合があります。現物ラベルを優先してください。</p></div></section>
   <section id="settings" class="view">
     <div class="panel">
       <div class="head-row"><div><small>更新・アプリ情報</small><h2>設定</h2></div></div>
@@ -258,21 +257,20 @@
         <div><strong>今すぐ最新版を確認</strong><p>GitHub上のversion.jsonをキャッシュせず確認します。</p></div>
         <button id="manualUpdateCheck" class="secondary">更新確認</button>
       </div>
-      <div id="updateStatus" class="box">現在 Ver1.0.1</div>
+      <div id="updateStatus" class="box">現在 Ver1.1</div>
     </div>
 
     <div class="panel">
       <h2>アプリ情報</h2>
       <dl class="app-info">
         <div><dt>アプリ名</dt><dd>健康コンシェルジュ</dd></div>
-        <div><dt>Version</dt><dd>1.0.1</dd></div>
-        <div><dt>Build</dt><dd>20260721-0910</dd></div>
-        <div><dt>キャッシュ</dt><dd>healthtools-v1.0.1</dd></div>
+        <div><dt>Version</dt><dd>1.1</dd></div><div><dt>Build</dt><dd>20260811-1100</dd></div><div><dt>キャッシュ</dt><dd>healthtools-v1.1</dd></div>
       </dl>
     </div>
 
     <div class="panel">
       <h2>更新履歴</h2>
+      <article class="release"><strong>Ver1.1</strong><p>JAN読取、商品検索、日本語OCR、健康判定、商品保存を追加。</p></article>
       <article class="release">
         <strong>Ver1.0.1</strong>
         <p>履歴の編集・AI再判定、個別削除（確認ダイアログ付き）を追加。既存機能を維持。</p>
@@ -290,8 +288,7 @@
 </main>
 
 <footer>
-  <strong>健康コンシェルジュ Ver1.0.1</strong><br>
-  Build 20260721-0910
+  <strong>健康コンシェルジュ Ver1.1</strong><br>Build 20260811-1100
 </footer>
 </body>
 </html>

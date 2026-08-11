@@ -1,5 +1,4 @@
-const CACHE="healthtools-v1.0.1";
-const CORE=["./","./index.html","./styles.css?v=1.0.1","./seasoning-db.js?v=1.0.1","./app.js?v=1.0.1","./manifest.webmanifest","./version.json","./icon.svg"];
+const CACHE="healthtools-v1.1";const CORE=["./","./index.html","./styles.css?v=1.1","./seasoning-db.js?v=1.1","./app.js?v=1.1","./product-scan.js?v=1.1","./vendor/html5-qrcode.min.js?v=1.1","./vendor/tesseract.min.js?v=1.1","./vendor/worker.min.js","./vendor/lang/jpn.traineddata.gz","./manifest.webmanifest","./version.json","./icon.svg"];
 self.addEventListener("install",event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener("activate",event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key.startsWith("healthtools-")&&key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener("message",event=>{if(event.data?.type==="SKIP_WAITING")self.skipWaiting();});
