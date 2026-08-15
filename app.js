@@ -1,4 +1,4 @@
-const VERSION="1.1.1";const BUILD="20260815-2110";
+const VERSION="1.1.2";const BUILD="20260815-2130";
 const $=id=>document.getElementById(id);
 const LS={foods:"hc07.foods",seasonings:"hc07.seasonings",fridge:"hc07.fridge",records:"hc07.records",autoUpdate:"hc07.autoUpdate",favorites:"hc08.seasoningFavorites",recent:"hc08.seasoningRecent",foodHistory:"hc08.foodSearchHistory",aiHistory:"hc09.aiSearchHistory"};
 const state={

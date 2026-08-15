@@ -1,0 +1,120 @@
+健康コンシェルジュ Ver1.1.2　GitHub更新手順
+================================================
+
+対象リポジトリ
+https://github.com/hara-den-ctrl/LifeTools
+
+【重要】
+このVer1.1.2は全ファイルを同じ階層へ置く完全平坦構成です。
+vendorフォルダを作る必要はありません。
+ZIPファイルそのものをGitHubへアップロードしないでください。
+
+1. ダウンロードしたZIPをパソコンで展開する
+------------------------------------------------
+「健康コンシェルジュ_Ver1.1.2_GitHub平坦版.zip」を右クリックし、
+「すべて展開」を選びます。
+
+展開後、index.html、app.js、html5-qrcode.min.js、
+tesseract.min.js、worker.min.js、jpn.traineddata.gzなどが、
+すべて同じフォルダ内に見える状態が正しいです。
+展開後のファイル数は合計28個です。
+
+2. GitHubのリポジトリを開く
+------------------------------------------------
+https://github.com/hara-den-ctrl/LifeTools
+
+mainブランチが選択されていることを確認します。
+
+3. ファイルアップロード画面を開く
+------------------------------------------------
+リポジトリ右上付近の「Add file」を押します。
+続いて「Upload files」を押します。
+
+4. 展開した全ファイルを選択する
+------------------------------------------------
+ZIP内のファイルをすべて選択し、GitHubのアップロード枠へ入れます。
+
+注意：ZIPファイルは選びません。
+注意：外側のフォルダではなく、中にある全ファイルを選びます。
+注意：既存ファイルと同名でも、そのまま上書き対象として追加します。
+
+5. アップロード対象を確認する
+------------------------------------------------
+次の重要ファイルが一覧にあることを確認します。
+
+index.html
+app.js
+product-scan.js
+service-worker.js
+version.json
+html5-qrcode.min.js
+tesseract.min.js
+worker.min.js
+jpn.traineddata.gz
+tesseract-core.js
+tesseract-core.wasm
+tesseract-core-simd.js
+tesseract-core-simd.wasm
+tesseract-core-lstm.js
+tesseract-core-lstm.wasm
+tesseract-core-simd-lstm.js
+tesseract-core-simd-lstm.wasm
+
+6. GitHubへ反映する
+------------------------------------------------
+Commit changes欄に、次のように入力します。
+
+Update Health Concierge to Ver1.1.2
+
+「Commit changes」を押します。
+処理が終わるまで画面を閉じないでください。
+
+7. GitHub上の配置を確認する
+------------------------------------------------
+リポジトリの最初の画面へ戻り、次のファイルが同じ一覧に表示されることを確認します。
+
+index.html
+html5-qrcode.min.js
+tesseract.min.js
+worker.min.js
+jpn.traineddata.gz
+
+vendorフォルダは不要です。
+
+8. GitHub Pagesの反映を待つ
+------------------------------------------------
+通常は数分待ちます。
+公開URL：
+https://hara-den-ctrl.github.io/LifeTools/
+
+画面上部または設定画面が「Ver1.1.2」になれば新ファイルが配信されています。
+
+9. iPhoneの旧キャッシュを更新する
+------------------------------------------------
+まずSafariで公開URLを直接開きます。
+ホーム画面のアイコンから先に開かず、Safariから確認してください。
+
+SafariでVer1.1.2が表示されたら、一度画面を閉じて再度開きます。
+その後、バーコード読取を試します。
+
+まだVer1.1.1が出る場合：
+iPhoneの「設定」→「アプリ」→「Safari」→「詳細」→
+「Webサイトデータ」を開き、github.ioまたはhara-den-ctrl.github.ioの
+該当データを削除してから、公開URLを開き直します。
+
+ホーム画面版だけ古い場合：
+古いホーム画面アイコンを削除し、SafariでVer1.1.2を確認後、
+共有ボタン→「ホーム画面に追加」で作り直します。
+
+10. 動作確認
+------------------------------------------------
+バーコード読取：
+「JANバーコードを読む」を押し、カメラ使用を許可します。
+カメラ画面が開けばバーコードライブラリの読込成功です。
+
+ラベルOCR：
+原材料または栄養成分の撮影ボタンから画像を選びます。
+初回はOCRデータの準備に時間がかかる場合があります。
+進捗表示が動けばOCRの読込成功です。
+
+以上
